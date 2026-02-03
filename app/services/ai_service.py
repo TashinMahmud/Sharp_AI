@@ -20,19 +20,23 @@ class AIService:
 
     def _call_ai(self, prompt: str) -> dict[str, Any]:
         """Call OpenAI API and return parsed JSON response."""
-        response = self._client.chat.completions.create(
-            model=self._model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You must respond with valid JSON only. Do not include any extra text.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.7,
-        )
-        return json.loads(response.choices[0].message.content or "{}")
+        try:
+            response = self._client.chat.completions.create(
+                model=self._model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You must respond with valid JSON only. Do not include any extra text.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.7,
+            )
+            content = response.choices[0].message.content or "{}"
+            return json.loads(content)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"AI returned invalid JSON: {e}") from e
 
     def generate_arguments(self, topic: str, difficulty: str) -> dict[str, Any]:
         """Generate main arguments, counter arguments, and rebuttals."""

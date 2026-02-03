@@ -1,7 +1,9 @@
 """Debate/quiz API routes."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from openai import APIError, APIConnectionError, AuthenticationError, RateLimitError
 
+from app.core.limiter import limiter
 from app.schemas import (
     ArgumentResponse,
     EvaluateRequest,
@@ -17,44 +19,54 @@ from app.services.ai_service import get_ai_service
 router = APIRouter(tags=["debate"])
 
 
+def _handle_ai_errors(e: Exception) -> HTTPException:
+    if isinstance(e, RateLimitError):
+        return HTTPException(status_code=429, detail="AI rate limit exceeded. Try again shortly.")
+    if isinstance(e, AuthenticationError):
+        return HTTPException(status_code=401, detail="Invalid AI API key.")
+    if isinstance(e, (APIError, APIConnectionError)):
+        return HTTPException(status_code=503, detail="AI service temporarily unavailable. Try again later.")
+    return HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/generate", response_model=ArgumentResponse)
-def generate_arguments(req: GenerateRequest):
+@limiter.limit("30/minute")
+def generate_arguments(request: Request, req: GenerateRequest):
     """Generate main arguments, counter arguments, and rebuttals for a topic."""
     try:
         service = get_ai_service()
         return service.generate_arguments(req.topic, req.difficulty)
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
+        raise _handle_ai_errors(e) from e
 
 
 @router.post("/quiz", response_model=QuizResponse)
-def generate_quiz(req: QuizRequest):
+@limiter.limit("30/minute")
+def generate_quiz(request: Request, req: QuizRequest):
     """Generate a multiple-choice quiz question from an argument."""
-    if not req.arguments:
-        raise HTTPException(
-            status_code=422, detail="At least one argument is required"
-        )
     try:
         service = get_ai_service()
         return service.generate_quiz(
             req.topic, req.difficulty, req.arguments[0]
         )
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
+        raise _handle_ai_errors(e) from e
 
 
 @router.post("/hint", response_model=HintResponse)
-def generate_hint(req: HintRequest):
+@limiter.limit("30/minute")
+def generate_hint(request: Request, req: HintRequest):
     """Generate a helpful hint for a question without revealing the answer."""
     try:
         service = get_ai_service()
         return service.generate_hint(req.question, req.arguments)
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
+        raise _handle_ai_errors(e) from e
 
 
 @router.post("/evaluate", response_model=EvaluateResponse)
-def evaluate_answer(req: EvaluateRequest):
+@limiter.limit("30/minute")
+def evaluate_answer(request: Request, req: EvaluateRequest):
     """Evaluate a student's answer and provide constructive feedback."""
     try:
         service = get_ai_service()
@@ -64,5 +76,5 @@ def evaluate_answer(req: EvaluateRequest):
             req.correct_answer,
             req.difficulty,
         )
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
+        raise _handle_ai_errors(e) from e

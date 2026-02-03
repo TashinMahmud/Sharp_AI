@@ -2,15 +2,17 @@
 
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from app.schemas.argument import Difficulty
 
 
 class QuizRequest(BaseModel):
     """Request schema for quiz generation."""
 
-    topic: str
-    difficulty: str
-    arguments: List[str]
+    topic: str = Field(..., min_length=1, max_length=500)
+    difficulty: Difficulty
+    arguments: List[str] = Field(..., min_length=1)
 
 
 class QuizResponse(BaseModel):
