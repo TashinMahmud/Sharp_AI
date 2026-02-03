@@ -1,3 +1,6 @@
+# Original main.py - contained all logic before refactor. Project is now structured; this file is kept as backup.
+
+"""
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
@@ -67,7 +70,7 @@ def call_ai(prompt: str):
 
 @app.post("/generate", response_model=ArgumentResponse)
 def generate_arguments(req: GenerateRequest):
-    prompt = f"""
+    prompt = f'''
 Generate arguments for the topic: "{req.topic}"
 Difficulty: {req.difficulty}
 
@@ -75,13 +78,13 @@ Return valid JSON only with:
 main_arguments: list
 counter_arguments: list
 rebuttals: list
-"""
+'''
     return call_ai(prompt)
 
 
 @app.post("/quiz", response_model=QuizResponse)
 def generate_quiz(req: QuizRequest):
-    prompt = f"""
+    prompt = f'''
 Create ONE multiple-choice quiz question from this argument:
 "{req.arguments[0]}"
 
@@ -93,13 +96,13 @@ question
 options (4 items)
 correct_answer (index)
 explanation
-"""
+'''
     return call_ai(prompt)
 
 
 @app.post("/hint", response_model=HintResponse)
 def generate_hint(req: HintRequest):
-    prompt = f"""
+    prompt = f'''
 Give a helpful hint for this question without revealing the answer.
 
 Question:
@@ -110,13 +113,13 @@ Context arguments:
 
 Return valid JSON only with:
 hint
-"""
+'''
     return call_ai(prompt)
 
 
 @app.post("/evaluate", response_model=EvaluateResponse)
 def evaluate_answer(req: EvaluateRequest):
-    prompt = f"""
+    prompt = f'''
 You are a debate coach.
 
 Question:
@@ -134,5 +137,6 @@ Difficulty:
 Give short, constructive feedback.
 Return valid JSON only with:
 feedback
-"""
+'''
     return call_ai(prompt)
+"""
