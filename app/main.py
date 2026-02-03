@@ -8,7 +8,7 @@ from app.api.routes import debate_router
 from app.core.limiter import limiter
 
 app = FastAPI(
-    title="Debate Quiz API",
+    title="FastAPI Quiz API",
     description="API for generating debate arguments, quiz questions, hints, and evaluations",
     version="1.0.0",
 )
