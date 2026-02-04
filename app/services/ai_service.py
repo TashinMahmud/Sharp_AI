@@ -1,7 +1,7 @@
 """AI service for OpenAI interactions."""
 
 import json
-from typing import Any
+from typing import Any, Literal, Optional
 
 from openai import OpenAI
 
@@ -112,6 +112,44 @@ Difficulty:
 Give short, constructive feedback.
 Return valid JSON only with:
 feedback
+"""
+        return self._call_ai(prompt)
+
+    def debate_chat(
+        self,
+        topic: str,
+        difficulty: str,
+        role: Literal["user_argument", "user_counter", "user_rebuttal"],
+        message: str,
+        debate_history: Optional[list[dict[str, str]]] = None,
+    ) -> dict[str, Any]:
+        """Handle a single debate-style chat turn."""
+        history_text = ""
+        if debate_history:
+            serialized_turns = [
+                f"{turn.get('role', 'unknown')}: {turn.get('message', '')}"
+                for turn in debate_history
+            ]
+            history_text = "\nPrevious turns:\n" + "\n".join(serialized_turns)
+
+        prompt = f"""
+You are an AI debate partner helping a user practice structured argumentation on the topic "{topic}".
+Difficulty: {difficulty}
+
+The user is sending a new message in the role: {role}.
+{history_text}
+
+Current user message:
+{message}
+
+Respond with exactly one of the following roles in the JSON field "ai_role":
+- "counter_argument" when the user_role is "user_argument"
+- "rebuttal" when the user_role is "user_counter"
+- "challenge" when the user_role is "user_rebuttal"
+
+Return valid JSON only with:
+ai_role
+ai_message
 """
         return self._call_ai(prompt)
 

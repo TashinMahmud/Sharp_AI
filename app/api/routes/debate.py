@@ -6,6 +6,8 @@ from openai import APIError, APIConnectionError, AuthenticationError, RateLimitE
 from app.core.limiter import limiter
 from app.schemas import (
     ArgumentResponse,
+    DebateChatRequest,
+    DebateChatResponse,
     EvaluateRequest,
     EvaluateResponse,
     GenerateRequest,
@@ -75,6 +77,28 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
             req.selected_answer,
             req.correct_answer,
             req.difficulty,
+        )
+    except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
+        raise _handle_ai_errors(e) from e
+
+
+@router.post("/debate/chat", response_model=DebateChatResponse)
+@limiter.limit("30/minute")
+def debate_chat(request: Request, req: DebateChatRequest):
+    """Single debate-style chat turn based on user role and history."""
+    try:
+        service = get_ai_service()
+        history = (
+            [turn.model_dump() for turn in req.debate_history]
+            if req.debate_history
+            else None
+        )
+        return service.debate_chat(
+            topic=req.topic,
+            difficulty=req.difficulty,
+            role=req.role,
+            message=req.message,
+            debate_history=history,
         )
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
