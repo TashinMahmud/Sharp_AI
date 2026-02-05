@@ -1,6 +1,6 @@
 # Debate Quiz API
 
-FastAPI backend for AI-powered debate conversations with persistent memory.
+FastAPI backend for AI-powered debate conversations with persistent memory and semantic search.
 
 ## ⚡ Quick Start
 
