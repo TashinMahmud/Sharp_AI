@@ -45,7 +45,6 @@ class MemoryService:
 
 
     def get_or_create_memory(self, user_id: str, session_id: str) -> ConversationBufferMemory:
-        """Get active session memory or create new one, rebuilding from disk if needed."""
         key = (user_id, session_id)
         if key not in self._active_sessions:
             memory = ConversationBufferMemory(
@@ -67,7 +66,6 @@ class MemoryService:
 
 
     def _rebuild_memory_from_disk(self, user_id: str, session_id: str, memory: ConversationBufferMemory):
-        """Re-populate a fresh ConversationBufferMemory with turns from ChromaDB."""
         results = self.vector_db.get(
             where={
                 "$and": [
@@ -105,7 +103,6 @@ class MemoryService:
                     raise
 
     def save_turn_persistent(self, user_id: str, session_id: str, user_msg: str, ai_msg: str):
-        """Save a turn to ChromaDB immediately."""
         import time
         timestamp = time.time()
         
@@ -142,7 +139,6 @@ class MemoryService:
         self.vector_db.add_documents([doc_user, doc_ai])
 
     def save_turn(self, user_id: str, session_id: str, user_msg: str, ai_msg: str):
-        """Save a single turn to short-term memory (RAM)."""
         memory = self.get_or_create_memory(user_id, session_id)
         memory.save_context(
             {"user_message": user_msg}, 
@@ -150,7 +146,6 @@ class MemoryService:
         )
 
     def summarize_and_store(self, user_id: str, session_id: str, summary: str):
-        """Store a conversation summary into long-term vector DB."""
         if not isinstance(summary, str):
             logger.warning(f"Summary is not a string: {type(summary)}, converting...")
             summary = str(summary)
@@ -167,7 +162,6 @@ class MemoryService:
         logger.info(f"Summary stored for user {user_id}, session {session_id}") 
 
     def retrieve_context(self, user_id: str, session_id: str, query: str, k: int = 3) -> str:
-        """Retrieve relevant past context from ChromaDB."""
         results = self.vector_db.similarity_search(
             query,
             k=k,
@@ -181,7 +175,6 @@ class MemoryService:
         return f"Relevant past context:\n{context_str}"
 
     def clear_session(self, user_id: str, session_id: str):
-        """Clear short-term memory for a session."""
         key = (user_id, session_id)
         if key in self._active_sessions:
             self._active_sessions[key].clear()

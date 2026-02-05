@@ -1,4 +1,3 @@
-"""FastAPI application entry point."""
 
 from fastapi import FastAPI
 from slowapi import _rate_limit_exceeded_handler
@@ -22,6 +21,4 @@ app.include_router(debate_router)
 @app.get("/health")
 @limiter.exempt
 def health_check():
-    """Health check endpoint for monitoring."""
     return {"status": "ok"}
-

@@ -82,7 +82,6 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
 def debate_chat(request: Request, req: DebateChatRequest):
     try:
         service = get_ai_service()
-        # Pass user_id and session_id to service which now handles memory
         result = service.debate_chat(
             topic=req.topic,
             difficulty=req.difficulty,

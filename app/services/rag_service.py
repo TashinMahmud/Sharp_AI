@@ -9,11 +9,7 @@ def build_debate_prompt(
     history_text: str,
     retrieved_context: str
 ) -> str:
-    """
-    Constructs the prompt for the debate chat, including short-term history and long-term retrieved context.
-    """
     
-    # Context section
     context_section = ""
     if retrieved_context:
         context_section = f"\nRelevant Context from Past Sessions:\n{retrieved_context}\n"
