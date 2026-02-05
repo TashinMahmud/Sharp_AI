@@ -1,6 +1,6 @@
 # Debate Quiz API
 
-FastAPI backend for AI-powered debate conversations with persistent memory and semantic search.
+FastAPI backend for AI-powered debate conversations
 
 ## ⚡ Quick Start
 
@@ -44,6 +44,10 @@ python test_api.py
 - Semantic search across past sessions
 - Quiz generation and argument evaluation
 
-## 📄 License
+## �️ Tech Stack
+
+Built with **ChromaDB**, **LangChain**, and **RAG** (Retrieval-Augmented Generation) for intelligent conversation memory.
+
+## �📄 License
 
 MIT License
