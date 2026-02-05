@@ -20,13 +20,11 @@ class MemoryService:
         try:
             self.settings = get_settings()
             
-            # 1. Initialize Embeddings
             self.embeddings = OpenAIEmbeddings(
                 api_key=self.settings.openai_api_key,
                 model="text-embedding-3-small"
             )
             
-            # 2. Initialize ChromaDB (Persistent)
             logger.info(f"Initializing ChromaDB at {self.settings.chroma_path}")
             self.vector_db = Chroma(
                 persist_directory=self.settings.chroma_path,
@@ -34,8 +32,6 @@ class MemoryService:
                 collection_name="debate_history"
             )
             
-            # 3. Initialize Short-term Memory Store (In-Memory)
-            # Key: (user_id, session_id) -> Value: ConversationBufferMemory
             self._active_sessions: Dict[Tuple[str, str], ConversationBufferMemory] = {}
         except Exception as e:
             logger.error(f"Failed to initialize MemoryService: {e}")
@@ -52,7 +48,6 @@ class MemoryService:
         """Get active session memory or create new one, rebuilding from disk if needed."""
         key = (user_id, session_id)
         if key not in self._active_sessions:
-            # Create new memory
             memory = ConversationBufferMemory(
                 memory_key="chat_history",
                 return_messages=True,
@@ -60,7 +55,6 @@ class MemoryService:
                 input_key="user_message"
             )
             
-            # Try to load existing history from Chroma
             try:
                 logger.info(f"Attempting to rebuild session {session_id} for user {user_id} from disk")
                 self._rebuild_memory_from_disk(user_id, session_id, memory)
@@ -71,38 +65,9 @@ class MemoryService:
             
         return self._active_sessions[key]
 
+
     def _rebuild_memory_from_disk(self, user_id: str, session_id: str, memory: ConversationBufferMemory):
         """Re-populate a fresh ConversationBufferMemory with turns from ChromaDB."""
-        # Retrieve recent turns
-        turns = self.vector_db.similarity_search(
-            query=" ", # Dummy query to match filter
-            k=20, # Load last 20 turns
-            filter={
-                "$and": [
-                    {"user_id": {"$eq": user_id}},
-                    {"session_id": {"$eq": session_id}},
-                    {"type": {"$eq": "turn"}},
-                ]
-            }
-        )
-        
-        # Sort by timestamp (if we had one, but Chroma doesn't strictly order by metadata without custom logic)
-        # Since similarity_search might not respect chronological order perfectly without custom retrieval,
-        # we'll assume for now standard retrieval. proper implementation would require ordering.
-        # However, for this implementation lets rely on standard retrieval or we'd need to fetch all and sort python side.
-        
-        # NOTE: A better approach for exact history is storing a separate timestamp and sorting.
-        # But `similarity_search` returns by relevance. 
-        # Chroma doesn't easily support "get last N by date". 
-        # Workaround: We will rely on the fact that we might just get "relevant" context if using similarity search.
-        # BUT the requirement is "Rebuild session".
-        # So we should actually just fetch *all* for this session? Or relying on "relevant" is tricky for linear history.
-        # Let's adjust: We can try to fetch by filter.
-        
-        # Actually, for true session reconstruction, a vector DB is slightly mismatched if used purely for linear history retrieval without vector search.
-        # But we can use `get` instead of `similarity_search` if we know IDs, or just filter.
-        # Chroma `get` supports filtering.
-        
         results = self.vector_db.get(
             where={
                 "$and": [
@@ -114,22 +79,18 @@ class MemoryService:
             include=["documents", "metadatas"]
         )
         
-        # Manual sorting by timestamp
         if results and results["documents"]:
             combined = []
             for i, doc in enumerate(results["documents"]):
                 meta = results["metadatas"][i]
                 combined.append({"content": doc, "metadata": meta})
             
-            # Sort by timestamp
             combined.sort(key=lambda x: x["metadata"].get("timestamp", 0))
             
-            # Replay into memory
             for item in combined:
                 role = item["metadata"].get("role")
                 content = item["content"]
                 
-                # Ensure content is a string
                 if not isinstance(content, str):
                     logger.warning(f"Content is not a string: {type(content)}, converting...")
                     content = str(content)
@@ -148,7 +109,6 @@ class MemoryService:
         import time
         timestamp = time.time()
         
-        # Ensure messages are strings
         if not isinstance(user_msg, str):
             logger.warning(f"user_msg is not a string: {type(user_msg)}, converting...")
             user_msg = str(user_msg)
@@ -157,7 +117,6 @@ class MemoryService:
             logger.warning(f"ai_msg is not a string: {type(ai_msg)}, converting...")
             ai_msg = str(ai_msg)
         
-        # Save User Message
         doc_user = Document(
             page_content=user_msg,
             metadata={
@@ -169,7 +128,6 @@ class MemoryService:
             }
         )
         
-        # Save AI Message (slightly later timestamp to ensure order)
         doc_ai = Document(
             page_content=ai_msg,
             metadata={
@@ -193,7 +151,6 @@ class MemoryService:
 
     def summarize_and_store(self, user_id: str, session_id: str, summary: str):
         """Store a conversation summary into long-term vector DB."""
-        # Ensure summary is a string
         if not isinstance(summary, str):
             logger.warning(f"Summary is not a string: {type(summary)}, converting...")
             summary = str(summary)
@@ -211,7 +168,6 @@ class MemoryService:
 
     def retrieve_context(self, user_id: str, session_id: str, query: str, k: int = 3) -> str:
         """Retrieve relevant past context from ChromaDB."""
-        # Filter by user_id to ensure privacy
         results = self.vector_db.similarity_search(
             query,
             k=k,

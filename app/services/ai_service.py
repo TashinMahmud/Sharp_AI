@@ -23,7 +23,6 @@ class AIService:
         self._client = OpenAI(api_key=settings.openai_api_key)
         self._model = settings.openai_model
         
-        # Initialize Memory Service
         self._memory_service = MemoryService.get_instance()
 
     @retry(
@@ -138,21 +137,17 @@ feedback
         session_id: Optional[str] = None,
     ) -> dict[str, Any]:
         
-        # 1. Retrieve Short-term History
         history_text = ""
         memory = None
         if user_id and session_id:
             memory = self._memory_service.get_or_create_memory(user_id, session_id)
-            # Inspect memory for context
             messages = memory.load_memory_variables({}).get("chat_history", [])
             history_text = "\n".join([f"{'User' if isinstance(m, HumanMessage) else 'AI'}: {m.content}" for m in messages])
 
-        # 2. Retrieve Long-term Context (RAG)
         retrieved_context = ""
         if user_id and session_id:
             retrieved_context = self._memory_service.retrieve_context(user_id, session_id, message)
 
-        # 3. Build Prompt
         prompt = build_debate_prompt(
             topic=topic,
             difficulty=difficulty,
@@ -162,26 +157,20 @@ feedback
             retrieved_context=retrieved_context
         )
 
-        # 4. Call AI
         result = self._call_ai(prompt)
         ai_message = result.get("ai_message", "")
         
-        # 5. Save Turn & Manage Memory
         if user_id and session_id and memory:
-            # Save to RAM
             self._memory_service.save_turn(user_id, session_id, message, ai_message)
-            # Save to Disk (Immediate Persistence)
             self._memory_service.save_turn_persistent(user_id, session_id, message, ai_message)
             
-            # Check if summarization is needed
             settings = get_settings()
             messages = memory.chat_memory.messages
             if len(messages) >= settings.memory_summary_trigger:
                 summary = self.summarize_conversation(messages)
                 self._memory_service.summarize_and_store(user_id, session_id, summary)
                 
-                # Prune memory
-                keep_count = settings.memory_keep_last * 2 # Humans + AIs
+                keep_count = settings.memory_keep_last * 2
                 memory.chat_memory.messages = messages[-keep_count:]
 
         return result
