@@ -2,6 +2,7 @@
 .env
 .venv
 venv/
+venv_corrupt/
 env/
 
 # Python
@@ -25,3 +26,13 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# ChromaDB Data (persistent storage)
+app/data/chroma_db/
+chroma_db/
+
+# Test artifacts
+*.log
+.pytest_cache/
+.coverage
+htmlcov/

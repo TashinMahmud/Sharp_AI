@@ -16,10 +16,8 @@ from app.schemas import (
     QuizResponse,
 )
 from app.services.ai_service import get_ai_service
-from app.services.conversation_memory import ConversationBufferMemory
 
 router = APIRouter(tags=["debate"])
-_memory = ConversationBufferMemory()
 
 
 def _handle_ai_errors(e: Exception) -> HTTPException:
@@ -84,34 +82,15 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
 def debate_chat(request: Request, req: DebateChatRequest):
     try:
         service = get_ai_service()
-        history_text = None
-        history = None
-        if req.user_id and req.session_id:
-            history_text = _memory.get_context(req.user_id, req.session_id)
-        else:
-            history = (
-                [turn.model_dump() for turn in req.debate_history]
-                if req.debate_history
-                else None
-            )
+        # Pass user_id and session_id to service which now handles memory
         result = service.debate_chat(
             topic=req.topic,
             difficulty=req.difficulty,
             role=req.role,
             message=req.message,
-            debate_history=history,
-            history_text=history_text,
+            user_id=req.user_id,
+            session_id=req.session_id,
         )
-        if req.user_id and req.session_id:
-            _memory.add_turn(
-                req.user_id,
-                req.session_id,
-                req.role,
-                req.message,
-                result.get("ai_role", "challenge"),
-                result.get("ai_message", ""),
-            )
-            _memory.summarize_if_needed(req.user_id, req.session_id)
         return result
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
