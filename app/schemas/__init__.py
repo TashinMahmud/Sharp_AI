@@ -1,4 +1,3 @@
-"""Pydantic schemas for request/response validation."""
 
 from app.schemas.argument import ArgumentResponse, Difficulty, GenerateRequest
 from app.schemas.debate_chat import (

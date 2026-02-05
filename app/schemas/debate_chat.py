@@ -1,4 +1,3 @@
-"""Debate chat schemas."""
 
 from typing import List, Literal, Optional
 
@@ -12,25 +11,23 @@ AIRole = Literal["counter_argument", "rebuttal", "challenge"]
 
 
 class DebateTurn(BaseModel):
-    """Single turn in the debate history."""
 
     role: str = Field(..., min_length=1, max_length=50)
     message: str = Field(..., min_length=1, max_length=2000)
 
 
 class DebateChatRequest(BaseModel):
-    """Request schema for a single debate chat turn."""
 
     topic: str = Field(..., min_length=1, max_length=500)
     difficulty: Difficulty
     role: DebateRole
     message: str = Field(..., min_length=1, max_length=2000)
     debate_history: Optional[List[DebateTurn]] = None
+    user_id: Optional[str] = Field(None, min_length=1, max_length=255)
+    session_id: Optional[str] = Field(None, min_length=1, max_length=255)
 
 
 class DebateChatResponse(BaseModel):
-    """Response schema for a single debate chat turn."""
 
     ai_role: AIRole
     ai_message: str = Field(..., min_length=1, max_length=2000)
-

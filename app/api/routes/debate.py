@@ -1,4 +1,3 @@
-"""Debate/quiz API routes."""
 
 from fastapi import APIRouter, HTTPException, Request
 from openai import APIError, APIConnectionError, AuthenticationError, RateLimitError
@@ -17,8 +16,10 @@ from app.schemas import (
     QuizResponse,
 )
 from app.services.ai_service import get_ai_service
+from app.services.conversation_memory import ConversationBufferMemory
 
 router = APIRouter(tags=["debate"])
+_memory = ConversationBufferMemory()
 
 
 def _handle_ai_errors(e: Exception) -> HTTPException:
@@ -34,7 +35,6 @@ def _handle_ai_errors(e: Exception) -> HTTPException:
 @router.post("/generate", response_model=ArgumentResponse)
 @limiter.limit("30/minute")
 def generate_arguments(request: Request, req: GenerateRequest):
-    """Generate main arguments, counter arguments, and rebuttals for a topic."""
     try:
         service = get_ai_service()
         return service.generate_arguments(req.topic, req.difficulty)
@@ -45,7 +45,6 @@ def generate_arguments(request: Request, req: GenerateRequest):
 @router.post("/quiz", response_model=QuizResponse)
 @limiter.limit("30/minute")
 def generate_quiz(request: Request, req: QuizRequest):
-    """Generate a multiple-choice quiz question from an argument."""
     try:
         service = get_ai_service()
         return service.generate_quiz(
@@ -58,7 +57,6 @@ def generate_quiz(request: Request, req: QuizRequest):
 @router.post("/hint", response_model=HintResponse)
 @limiter.limit("30/minute")
 def generate_hint(request: Request, req: HintRequest):
-    """Generate a helpful hint for a question without revealing the answer."""
     try:
         service = get_ai_service()
         return service.generate_hint(req.question, req.arguments)
@@ -69,7 +67,6 @@ def generate_hint(request: Request, req: HintRequest):
 @router.post("/evaluate", response_model=EvaluateResponse)
 @limiter.limit("30/minute")
 def evaluate_answer(request: Request, req: EvaluateRequest):
-    """Evaluate a student's answer and provide constructive feedback."""
     try:
         service = get_ai_service()
         return service.evaluate_answer(
@@ -85,20 +82,36 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
 @router.post("/debate/chat", response_model=DebateChatResponse)
 @limiter.limit("30/minute")
 def debate_chat(request: Request, req: DebateChatRequest):
-    """Single debate-style chat turn based on user role and history."""
     try:
         service = get_ai_service()
-        history = (
-            [turn.model_dump() for turn in req.debate_history]
-            if req.debate_history
-            else None
-        )
-        return service.debate_chat(
+        history_text = None
+        history = None
+        if req.user_id and req.session_id:
+            history_text = _memory.get_context(req.user_id, req.session_id)
+        else:
+            history = (
+                [turn.model_dump() for turn in req.debate_history]
+                if req.debate_history
+                else None
+            )
+        result = service.debate_chat(
             topic=req.topic,
             difficulty=req.difficulty,
             role=req.role,
             message=req.message,
             debate_history=history,
+            history_text=history_text,
         )
+        if req.user_id and req.session_id:
+            _memory.add_turn(
+                req.user_id,
+                req.session_id,
+                req.role,
+                req.message,
+                result.get("ai_role", "challenge"),
+                result.get("ai_message", ""),
+            )
+            _memory.summarize_if_needed(req.user_id, req.session_id)
+        return result
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
