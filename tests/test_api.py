@@ -1,7 +1,3 @@
-"""
-API Test Script - Tests the entire debate backend including persistence
-Run this while the server is running: uvicorn app.main:app --reload
-"""
 import requests
 import json
 import time
@@ -23,7 +19,6 @@ def print_response(title, response):
     print()
 
 def test_debate_chat_1():
-    """Test 1: Send first debate message"""
     print("\n🚀 TEST 1: Starting debate conversation...")
     
     payload = {
@@ -40,7 +35,6 @@ def test_debate_chat_1():
     return response.status_code == 200
 
 def test_debate_chat_2():
-    """Test 2: Send second message in same session"""
     print("\n💬 TEST 2: Continuing the debate...")
     
     payload = {
@@ -57,7 +51,6 @@ def test_debate_chat_2():
     return response.status_code == 200
 
 def test_memory_persistence():
-    """Test 3: Test if AI remembers previous conversation"""
     print("\n🧠 TEST 3: Testing memory (AI should remember previous messages)...")
     
     payload = {
@@ -72,7 +65,6 @@ def test_memory_persistence():
     response = requests.post(f"{BASE_URL}/debate/chat", json=payload)
     print_response("Memory Test Response", response)
     
-    # Check if response references the previous messages
     try:
         data = response.json()
         response_text = data.get("response", "").lower()
@@ -95,7 +87,6 @@ def main():
 ╚════════════════════════════════════════════════════════════╝
     """)
     
-    # Check if server is running
     try:
         response = requests.get(f"{BASE_URL}/health")
         print("✅ Server is running!")
@@ -106,7 +97,6 @@ def main():
         print("  uvicorn app.main:app --reload")
         return
     
-    # Run tests
     results = []
     
     results.append(("First Message", test_debate_chat_1()))
@@ -117,7 +107,6 @@ def main():
     
     results.append(("Memory Persistence", test_memory_persistence()))
     
-    # Summary
     print("\n" + "="*60)
     print("  TEST SUMMARY")
     print("="*60)

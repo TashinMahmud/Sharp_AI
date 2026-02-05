@@ -1,7 +1,3 @@
-"""
-Test Summarization Feature
-This test sends 12+ messages to trigger automatic summarization
-"""
 import requests
 import json
 import time
@@ -16,7 +12,6 @@ print("""
 ╚════════════════════════════════════════════════════════════╝
 """)
 
-# Check if server is running
 try:
     response = requests.get(f"{BASE_URL}/health")
     print("✅ Server is running\n")
@@ -61,7 +56,7 @@ for i, (role, message) in enumerate(messages, 1):
         print(f"  {response.text}")
         break
     
-    time.sleep(0.5)  # Small delay to avoid rate limiting
+    time.sleep(0.5)
 
 print("\n" + "="*60)
 print("\n🔍 VERIFICATION:")

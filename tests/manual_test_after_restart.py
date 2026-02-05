@@ -1,7 +1,3 @@
-"""
-Manual Test - Step 2: After Server Restart
-Run this AFTER restarting the server to verify persistence
-"""
 import requests
 import json
 
@@ -15,7 +11,6 @@ print("""
 
 print("🔄 Server has been restarted. Testing if memory persists...\n")
 
-# Check if server is running
 try:
     health = requests.get(f"{BASE_URL}/health")
     print("✅ Server is running\n")
@@ -25,7 +20,6 @@ except:
 
 print("="*60 + "\n")
 
-# Test persistence
 print("🧠 Asking AI to recall the conversation from BEFORE restart...")
 response = requests.post(f"{BASE_URL}/debate/chat", json={
     "user_id": "manual_test_user",
@@ -43,7 +37,6 @@ if response.status_code == 200:
     print("\n📋 AI's Response:")
     print(f"\n{ai_message}\n")
     
-    # Check if AI remembered from before restart
     remembered_survival = "survival" in ai_message.lower() or "uninhabitable" in ai_message.lower() or "earth" in ai_message.lower()
     remembered_innovation = "innovation" in ai_message.lower() or "technological" in ai_message.lower() or "scientific" in ai_message.lower() or "discoveries" in ai_message.lower()
     

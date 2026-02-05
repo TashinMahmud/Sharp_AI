@@ -1,7 +1,3 @@
-"""
-Verify Summary Retrieval Test
-This test verifies that summaries stored in ChromaDB can be retrieved
-"""
 import requests
 import json
 
@@ -15,7 +11,6 @@ print("""
 ╚════════════════════════════════════════════════════════════╝
 """)
 
-# Check if server is running
 try:
     response = requests.get(f"{BASE_URL}/health")
     print("✅ Server is running\n")
@@ -32,7 +27,6 @@ print(f"\nSending a query to the SAME session used in test_summarization.py")
 print(f"   User ID: {USER_ID}")
 print(f"   Session ID: {SESSION_ID}\n")
 
-# Ask about the renewable energy discussion
 query = "Can you summarize what we discussed about renewable energy?"
 
 print(f"📝 Query: '{query}'")
@@ -51,7 +45,6 @@ if response.status_code == 200:
     print(f"\n✅ AI Response:")
     print(f"\n{ai_response}\n")
     
-    # Check if AI referenced topics from the 12 messages
     keywords = [
         "solar", "wind", "battery", "jobs", "carbon", 
         "pollution", "cheaper", "electric", "independence", "investment"

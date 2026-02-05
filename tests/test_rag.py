@@ -1,7 +1,3 @@
-"""
-Test RAG (Retrieval-Augmented Generation) Feature
-This test creates multiple sessions and verifies semantic retrieval
-"""
 import requests
 import json
 import time
@@ -15,7 +11,6 @@ print("""
 ╚════════════════════════════════════════════════════════════╝
 """)
 
-# Check if server is running
 try:
     response = requests.get(f"{BASE_URL}/health")
     print("✅ Server is running\n")
@@ -25,7 +20,6 @@ except:
 
 print("📝 Creating multiple sessions with different topics...\n")
 
-# Session 1: Climate Change
 print("Session 1: Climate Change Discussion")
 sessions = [
     {
@@ -54,7 +48,6 @@ sessions = [
     }
 ]
 
-# Create sessions
 for session_data in sessions:
     session_id = session_data["session_id"]
     topic = session_data["topic"]
@@ -83,7 +76,6 @@ print("\n" + "="*60)
 print("\n🔍 TESTING RAG RETRIEVAL:")
 print("\nSending a query that should retrieve context from previous sessions...")
 
-# Test RAG: Ask about renewable energy in a NEW session
 test_session = "rag_test_new_session"
 query = "What did I say about renewable energy solutions?"
 
@@ -104,7 +96,6 @@ if response.status_code == 200:
     print(f"\n✅ AI Response:")
     print(f"\n{ai_response}\n")
     
-    # Check if AI referenced previous sessions
     keywords = ["solar", "wind", "electric", "carbon", "reforestation"]
     found_keywords = [kw for kw in keywords if kw.lower() in ai_response.lower()]
     

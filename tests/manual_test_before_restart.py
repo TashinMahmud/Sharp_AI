@@ -1,7 +1,3 @@
-"""
-Manual Test - Step 1: Initial Conversation
-Run this BEFORE restarting the server
-"""
 import requests
 import json
 
@@ -13,7 +9,6 @@ print("""
 ╚════════════════════════════════════════════════════════════╝
 """)
 
-# Test 1: Send first message
 print("📝 Sending Message 1: Mars colonization...")
 response = requests.post(f"{BASE_URL}/debate/chat", json={
     "user_id": "manual_test_user",
@@ -33,7 +28,6 @@ else:
 
 print("\n" + "="*60 + "\n")
 
-# Test 2: Send second message
 print("📝 Sending Message 2: Scientific advancement...")
 response = requests.post(f"{BASE_URL}/debate/chat", json={
     "user_id": "manual_test_user",
@@ -53,7 +47,6 @@ else:
 
 print("\n" + "="*60 + "\n")
 
-# Test 3: Ask AI to recall
 print("🧠 Testing Memory: Asking AI to recall what you said...")
 response = requests.post(f"{BASE_URL}/debate/chat", json={
     "user_id": "manual_test_user",
@@ -70,7 +63,6 @@ if response.status_code == 200:
     print("✅ Memory test response:")
     print(f"\n{ai_message}\n")
     
-    # Check if AI remembered
     if ("survival" in ai_message.lower() or "uninhabitable" in ai_message.lower()) and ("innovation" in ai_message.lower() or "technological" in ai_message.lower() or "scientific" in ai_message.lower()):
         print("✅ SUCCESS: AI remembered BOTH points!")
     else:

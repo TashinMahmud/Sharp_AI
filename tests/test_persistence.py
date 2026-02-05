@@ -3,7 +3,6 @@ import sys
 import os
 import shutil
 
-# Add project root to path
 sys.path.append(os.getcwd())
 
 from app.services.memory_service import MemoryService
@@ -13,28 +12,19 @@ def test_persistence():
     user_id = "test_user_persist"
     session_id = "session_persist_1"
     
-    # 1. Initialize Service
     print("Initializing MemoryService...")
     service = MemoryService.get_instance()
     
-    # Clear any existing data for this session (for clean test)
-    # Note: Chroma doesn't have easy delete by metadata in all versions, 
-    # but strictly for this test we'll just use a unique session ID.
-    
-    # 2. Add data to persistence (Save Turn)
     print("Saving turns to persistence...")
     service.save_turn_persistent(user_id, session_id, "Hello, are you there?", "Yes, I am here.")
     service.save_turn_persistent(user_id, session_id, "What is 2+2?", "2+2 is 4.")
     
-    # 3. CLEAER IN-MEMORY CACHE (Simulate Server Restart)
     print("Clearing in-memory cache (Simulating Restart)...")
     service._active_sessions.clear()
     
-    # 4. Re-load memory
     print("Reloading memory for session...")
     memory = service.get_or_create_memory(user_id, session_id)
     
-    # 5. Verify Content
     history = memory.load_memory_variables({})["chat_history"]
     print(f"Loaded {len(history)} messages.")
     

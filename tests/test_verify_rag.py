@@ -1,7 +1,3 @@
-"""
-Verify RAG Persistence Test
-This test verifies that RAG data persists across server restarts
-"""
 import requests
 import json
 
@@ -14,7 +10,6 @@ print("""
 ╚════════════════════════════════════════════════════════════╝
 """)
 
-# Check if server is running
 try:
     response = requests.get(f"{BASE_URL}/health")
     print("✅ Server is running\n")
@@ -32,7 +27,6 @@ print("  • Climate change (carbon capture, reforestation)")
 print("  • Renewable energy (solar, wind)")
 print("  • Transportation (EVs, public transit)\n")
 
-# Test queries
 test_queries = [
     {
         "query": "What solutions did I mention for climate change?",
@@ -56,7 +50,6 @@ for i, test in enumerate(test_queries, 1):
     
     print(f"\n📝 Query {i}: '{query}'")
     
-    # Use a NEW session each time to prove cross-session retrieval
     response = requests.post(f"{BASE_URL}/debate/chat", json={
         "user_id": USER_ID,
         "session_id": f"verify_rag_session_{i}",
@@ -70,7 +63,6 @@ for i, test in enumerate(test_queries, 1):
         ai_response = response.json()["ai_message"]
         print(f"   AI: {ai_response[:100]}...")
         
-        # Check for keywords
         found = [kw for kw in expected if kw.lower() in ai_response.lower()]
         
         if found:
