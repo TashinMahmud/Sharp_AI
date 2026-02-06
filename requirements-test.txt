@@ -1,0 +1,14 @@
+
+fastapi
+uvicorn
+httpx
+pytest
+pydantic
+pydantic-settings
+openai
+langchain
+langchain-community
+langchain-openai
+chromadb
+tenacity
+slowapi

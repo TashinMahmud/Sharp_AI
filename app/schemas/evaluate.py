@@ -14,6 +14,8 @@ class EvaluateRequest(BaseModel):
     difficulty: Difficulty
     user_id: Optional[str] = Field(None, min_length=1, max_length=255)
     session_id: Optional[str] = Field(None, min_length=1, max_length=255)
+    topic_id: Optional[str] = Field(None)
+    topic_name: Optional[str] = Field(None)
 
 
 class EvaluateResponse(BaseModel):

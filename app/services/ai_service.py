@@ -23,7 +23,13 @@ class AIService:
         self._client = OpenAI(api_key=settings.openai_api_key)
         self._model = settings.openai_model
         
+
         self._memory_service = MemoryService.get_instance()
+
+    @staticmethod
+    def get_instance() -> "AIService":
+        return AIService()
+
 
     @retry(
         retry=retry_if_exception_type((APIConnectionError, RateLimitError, APIError)),
@@ -67,11 +73,12 @@ rebuttals: list
         return self._call_ai(prompt)
 
     def generate_quiz(
-        self, topic: str, difficulty: str, argument: str
+        self, topic: str, difficulty: str, arguments: list[str]
     ) -> dict[str, Any]:
+        args_text = "\n".join(f"- {arg}" for arg in arguments)
         prompt = f"""
-Create ONE multiple-choice quiz question from this argument:
-"{argument}"
+Create ONE multiple-choice quiz question based on these arguments:
+{args_text}
 
 Topic: {topic}
 Difficulty: {difficulty}
@@ -135,6 +142,7 @@ feedback
         message: str,
         user_id: Optional[str] = None,
         session_id: Optional[str] = None,
+        study_materials: Optional[str] = None,
     ) -> dict[str, Any]:
         
         history_text = ""
@@ -154,7 +162,8 @@ feedback
             role=role,
             user_message=message,
             history_text=history_text,
-            retrieved_context=retrieved_context
+            retrieved_context=retrieved_context,
+            study_materials=study_materials
         )
 
         result = self._call_ai(prompt)
