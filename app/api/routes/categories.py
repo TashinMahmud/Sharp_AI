@@ -3,6 +3,8 @@ from typing import List
 
 from app.models.category import CategoryCreate, CategoryResponse
 from app.services.category_service import get_category_service
+from app.services.topic_service import get_topic_service
+from app.services.material_service import get_material_service
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -31,11 +33,27 @@ async def get_categories(user_id: str):
 @router.delete("/{category_id}")
 async def delete_category(category_id: str):
     try:
-        service = get_category_service()
-        success = service.delete_category(category_id=category_id)
+        category_service = get_category_service()
+        topic_service = get_topic_service()
+        material_service = get_material_service()
+        
+        # 1. Get all topics in this category
+        topics = topic_service.get_topics_by_category(category_id=category_id)
+        
+        # 2. Delete materials and topics for each topic
+        for topic in topics:
+            material_service.delete_materials(topic_id=topic.topic_id)
+            topic_service.delete_topic(topic_id=topic.topic_id)
+        
+        # 3. Delete the category itself
+        success = category_service.delete_category(category_id=category_id)
         if not success:
             raise HTTPException(status_code=404, detail="Category not found")
-        return {"message": "Category deleted successfully"}
+        
+        return {
+            "message": "Category and all related data deleted successfully",
+            "topics_deleted": len(topics)
+        }
     except HTTPException:
         raise
     except Exception as e:

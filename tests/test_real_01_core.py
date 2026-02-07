@@ -62,7 +62,7 @@ else:
 
 # --- SCENARIO 4: Get Topics (Success) ---
 print("\n--- Scenario 4: Retrieve Category Topics ---")
-get_topic_resp = requests.get(f"{BASE_URL}/topics/{category_id}")
+get_topic_resp = requests.get(f"{BASE_URL}/topics/category/{category_id}")
 if get_topic_resp.status_code == 200:
     topics = get_topic_resp.json()
     found = any(t["topic_id"] == topic_id for t in topics)

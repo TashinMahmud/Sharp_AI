@@ -42,7 +42,7 @@ class TopicService:
             cls._instance = cls()
         return cls._instance
     
-    def create_topic(self, user_id: str, category_id: str, topic_name: str, description: Optional[str] = None) -> TopicResponse:
+    def create_topic(self, user_id: str, topic_name: str, category_id: Optional[str] = None, description: Optional[str] = None) -> TopicResponse:
         topic_id = str(uuid.uuid4())
         created_at = datetime.now()
         
@@ -95,7 +95,33 @@ class TopicService:
                     topic_id=meta["topic_id"],
                     topic_name=meta["topic_name"],
                     description=meta.get("description"),
-                    category_id=meta["category_id"],
+                    category_id=meta.get("category_id"),
+                    created_at=datetime.fromisoformat(meta["created_at"]),
+                    has_materials=False
+                ))
+        
+        return topics
+    
+    def get_topics_by_user(self, user_id: str) -> List[TopicResponse]:
+        """Get all topics for a user, including those without a category."""
+        results = self.vector_db.get(
+            where={
+                "$and": [
+                    {"user_id": {"$eq": user_id}},
+                    {"type": {"$eq": "topic"}}
+                ]
+            },
+            include=["metadatas"]
+        )
+        
+        topics = []
+        if results and results["metadatas"]:
+            for meta in results["metadatas"]:
+                topics.append(TopicResponse(
+                    topic_id=meta["topic_id"],
+                    topic_name=meta["topic_name"],
+                    description=meta.get("description"),
+                    category_id=meta.get("category_id"),  # May be None
                     created_at=datetime.fromisoformat(meta["created_at"]),
                     has_materials=False
                 ))

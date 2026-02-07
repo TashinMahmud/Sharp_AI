@@ -31,8 +31,35 @@ topic_id = t_resp.json()["topic_id"]
 requests.post(f"{BASE_URL}/materials/generate", json={"topic_id": topic_id, "user_id": USER_ID})
 print("Setup Complete.")
 
-# --- SCENARIO 1: Topic Quiz ---
-print("\n--- Scenario 1: Generate Topic Quiz ---")
+# --- SCENARIO 1a: Random Quiz (from all user topics) ---
+print("\n--- Scenario 1a: Random Quiz ---")
+random_quiz_resp = requests.post(f"{BASE_URL}/training/random-quiz", json={
+    "user_id": USER_ID,
+    "difficulty": "medium"
+})
+if random_quiz_resp.status_code == 200:
+    rq = random_quiz_resp.json()
+    print(f"   Q: {rq['question'][:60]}...")
+    print_result("1a", True, "Random quiz generated")
+else:
+    print_result("1a", False, f"Failed: {random_quiz_resp.text}")
+
+# --- SCENARIO 1b: Category Quiz ---
+print("\n--- Scenario 1b: Category Quiz ---")
+cat_quiz_resp = requests.post(f"{BASE_URL}/training/category-quiz", json={
+    "user_id": USER_ID,
+    "category_id": cat_id,
+    "difficulty": "medium"
+})
+if cat_quiz_resp.status_code == 200:
+    cq = cat_quiz_resp.json()
+    print(f"   Q: {cq['question'][:60]}...")
+    print_result("1b", True, "Category quiz generated")
+else:
+    print_result("1b", False, f"Failed: {cat_quiz_resp.text}")
+
+# --- SCENARIO 1c: Topic Quiz (Specific) ---
+print("\n--- Scenario 1c: Topic Quiz ---")
 quiz_resp = requests.post(f"{BASE_URL}/training/topic-quiz", json={
     "user_id": USER_ID,
     "topic_id": topic_id,
@@ -41,9 +68,9 @@ quiz_resp = requests.post(f"{BASE_URL}/training/topic-quiz", json={
 if quiz_resp.status_code == 200:
     quiz = quiz_resp.json()
     print(f"   Q: {quiz['question']}")
-    print_result(1, True, "Quiz generated")
+    print_result("1c", True, "Topic quiz generated")
 else:
-    print_result(1, False, f"Failed: {quiz_resp.text}")
+    print_result("1c", False, f"Failed: {quiz_resp.text}")
 
 # --- SCENARIO 2: Evaluate Correct Answer ---
 print("\n--- Scenario 2: Evaluate Correct Answer ---")
@@ -92,7 +119,7 @@ stats_resp = requests.get(f"{BASE_URL}/training/stats/{USER_ID}")
 if stats_resp.status_code == 200:
     stats = stats_resp.json()
     total = stats["total_quizzes"]
-    print(f"   Total Quizzes: {total}, Accuracy: {stats['accuracy']}%")
+    print(f"   Total Quizzes: {total}, Win Rate: {stats['win_rate']}%")
     if total >= 2: # >= because user might have run other tests with this ID if collision (though unlikely with timestamp)
         print_result(4, True, "Stats updated correctly")
     else:

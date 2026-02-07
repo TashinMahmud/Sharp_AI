@@ -8,7 +8,8 @@ from app.api.routes import (
     categories_router,
     topics_router,
     materials_router,
-    training_router
+    training_router,
+    users_router
 )
 from app.core.limiter import limiter
 
@@ -26,6 +27,7 @@ app.include_router(categories_router)
 app.include_router(topics_router)
 app.include_router(materials_router)
 app.include_router(training_router)
+app.include_router(users_router)
 
 
 @app.get("/health")

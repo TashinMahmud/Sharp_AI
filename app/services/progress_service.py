@@ -1,11 +1,7 @@
 import logging
 import uuid
 from datetime import datetime
-
 from typing import List, Dict, Any
-
-
-
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 
@@ -103,6 +99,28 @@ class ProgressService:
         except Exception as e:
             logger.error(f"Failed to get stats for user {user_id}: {e}")
             return ProgressStats(total_quizzes=0, correct_answers=0, win_rate=0.0, topics_practiced=0)
+
+    def delete_user_progress(self, user_id: str) -> int:
+        try:
+            results = self.vector_db.get(
+                where={
+                    "$and": [
+                        {"user_id": {"$eq": user_id}},
+                        {"type": {"$eq": "progress"}}
+                    ]
+                },
+                include=["metadatas"]
+            )
+            
+            if results and results["ids"]:
+                ids_to_delete = results["ids"]
+                self.vector_db.delete(ids=ids_to_delete)
+                logger.info(f"Deleted {len(ids_to_delete)} progress records for user {user_id}")
+                return len(ids_to_delete)
+            return 0
+        except Exception as e:
+            logger.error(f"Failed to delete progress for user {user_id}: {e}")
+            return 0
 
 def get_progress_service() -> ProgressService:
     return ProgressService.get_instance()

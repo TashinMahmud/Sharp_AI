@@ -43,7 +43,7 @@ resp1 = requests.post(f"{BASE_URL}/training/debate", json={
 })
 
 if resp1.status_code == 200:
-    reply = resp1.json()["response"]
+    reply = resp1.json()["ai_message"]
     print(f"   AI: {reply[:100]}...")
     print_result(1, True, "AI responded to argument")
 else:
@@ -63,7 +63,7 @@ resp2 = requests.post(f"{BASE_URL}/training/debate", json={
 })
 
 if resp2.status_code == 200:
-    reply = resp2.json()["response"]
+    reply = resp2.json()["ai_message"]
     print(f"   AI: {reply[:100]}...")
     print_result(2, True, "AI responded to counter-argument")
 else:
@@ -83,7 +83,7 @@ resp3 = requests.post(f"{BASE_URL}/training/debate", json={
 })
 
 if resp3.status_code == 200:
-    reply = resp3.json()["response"]
+    reply = resp3.json()["ai_message"]
     print(f"   AI: {reply[:100]}...")
     print_result(3, True, "AI handled short message")
 else:

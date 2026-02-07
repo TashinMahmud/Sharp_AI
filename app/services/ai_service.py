@@ -62,13 +62,22 @@ class AIService:
 
     def generate_arguments(self, topic: str, difficulty: str) -> dict[str, Any]:
         prompt = f"""
-Generate arguments for the topic: "{topic}"
+Generate comprehensive study materials for the topic: "{topic}"
 Difficulty: {difficulty}
 
+You must generate EXACTLY 5 items for each category. Each item should be a complete, well-reasoned point.
+
 Return valid JSON only with:
-main_arguments: list
-counter_arguments: list
-rebuttals: list
+{{
+  "main_arguments": ["arg1", "arg2", "arg3", "arg4", "arg5"],
+  "counter_arguments": ["counter1", "counter2", "counter3", "counter4", "counter5"],
+  "rebuttals": ["rebuttal1", "rebuttal2", "rebuttal3", "rebuttal4", "rebuttal5"]
+}}
+
+Make each argument substantive and educational. For {difficulty} difficulty:
+- easy: Simple, clear points suitable for beginners
+- medium: Balanced arguments with some nuance
+- hard: Complex, nuanced points with academic depth
 """
         return self._call_ai(prompt)
 
