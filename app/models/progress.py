@@ -3,19 +3,19 @@ from typing import Optional
 from datetime import datetime
 
 class Progress(BaseModel):
-    user_id: str
-    topic_id: str
+    user_id: int
+    topic_id: int
     topic_name: str
-    score: int  # 1 for correct, 0 for incorrect
-    difficulty: str
+    score: float
+    difficulty: int
     timestamp: datetime = Field(default_factory=datetime.now)
 
 class ProgressCreate(BaseModel):
-    user_id: str
-    topic_id: str
+    user_id: int
+    topic_id: int
     topic_name: str
-    score: int
-    difficulty: str
+    score: float
+    difficulty: int
 
 class ProgressStats(BaseModel):
     total_quizzes: int

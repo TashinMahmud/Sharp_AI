@@ -1,21 +1,23 @@
 
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Dict, Any
 
 from pydantic import BaseModel, Field
 
-Difficulty = Literal["easy", "medium", "hard"]
+
+
+from app.schemas.usage import UsageStats
 
 
 class GenerateRequest(BaseModel):
 
-    topic: str = Field(..., min_length=1, max_length=500)
-    difficulty: Difficulty
-    user_id: Optional[str] = Field(None, min_length=1, max_length=255)
+    topicId: int
+    userId: int
+    difficulty: int = Field(..., ge=1, le=5)
     session_id: Optional[str] = Field(None, min_length=1, max_length=255)
 
 
 class ArgumentResponse(BaseModel):
 
-    main_arguments: List[str]
-    counter_arguments: List[str]
-    rebuttals: List[str]
+    content: Dict[str, Any]
+    generatedBy: str = "gpt-4o-mini"
+    usage: Optional[UsageStats] = None

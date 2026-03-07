@@ -52,7 +52,25 @@ class AIService:
                 temperature=0.7,
             )
             content = response.choices[0].message.content or "{}"
-            return json.loads(content)
+            result = json.loads(content)
+            
+            if response.usage:
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+                total_tokens = response.usage.total_tokens
+                # Cost for gpt-4o-mini
+                cost = (prompt_tokens * 0.00000015) + (completion_tokens * 0.0000006)
+                
+                result["usage"] = {
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "totalTokens": total_tokens,
+                    "totalPrompts": 1,
+                    "estimated_cost_usd": cost,
+                    "model": "gpt-4o-mini"
+                }
+
+            return result
         except json.JSONDecodeError as e:
             logger.error(f"Failed to decode JSON from AI response: {e}")
             raise ValueError(f"AI returned invalid JSON: {e}") from e
@@ -60,10 +78,11 @@ class AIService:
             logger.error(f"AI call failed: {e}")
             raise
 
-    def generate_arguments(self, topic: str, difficulty: str) -> dict[str, Any]:
+    def generate_arguments(self, topic: str, difficulty: int) -> dict[str, Any]:
+        difficulty_str = {1: "very easy", 2: "easy", 3: "medium", 4: "hard", 5: "expert"}.get(difficulty, "medium")
         prompt = f"""
 Generate comprehensive study materials for the topic: "{topic}"
-Difficulty: {difficulty}
+Difficulty: {difficulty}/5 ({difficulty_str})
 
 You must generate EXACTLY 5 items for each category. Each item should be a complete, well-reasoned point.
 
@@ -73,13 +92,17 @@ Return valid JSON only with:
   "counter_arguments": ["counter1", "counter2", "counter3", "counter4", "counter5"],
   "rebuttals": ["rebuttal1", "rebuttal2", "rebuttal3", "rebuttal4", "rebuttal5"]
 }}
-
-Make each argument substantive and educational. For {difficulty} difficulty:
-- easy: Simple, clear points suitable for beginners
-- medium: Balanced arguments with some nuance
-- hard: Complex, nuanced points with academic depth
 """
-        return self._call_ai(prompt)
+        raw_result = self._call_ai(prompt)
+        return {
+            "content": {
+                "main_arguments": raw_result.get("main_arguments", []),
+                "counter_arguments": raw_result.get("counter_arguments", []),
+                "rebuttals": raw_result.get("rebuttals", [])
+            },
+            "generatedBy": "gpt-4o-mini",
+            "usage": raw_result.get("usage", {})
+        }
 
     def generate_quiz(
         self, topic: str, difficulty: str, arguments: list[str]
@@ -120,7 +143,7 @@ hint
         question: str,
         selected_answer: str,
         correct_answer: str,
-        difficulty: str,
+        difficulty: int,
     ) -> dict[str, Any]:
         prompt = f"""
 You are a debate coach.
@@ -135,21 +158,29 @@ Correct answer:
 {correct_answer}
 
 Difficulty:
-{difficulty}
+{difficulty}/5
 
-Give short, constructive feedback.
-Return valid JSON only with:
-feedback
+Give short, constructive feedback and score the answer as a float between 0.0 (wrong) and 1.0 (perfect).
+Return valid JSON only with exactly these keys:
+"feedback"
+"score"
 """
-        return self._call_ai(prompt)
+        raw_result = self._call_ai(prompt)
+        return {
+            "score": float(raw_result.get("score", 0.0)),
+            "feedback": raw_result.get("feedback", "No feedback provided."),
+            "answer": {"selected_answer": selected_answer, "correct_answer": correct_answer},
+            "usage": raw_result.get("usage", {})
+        }
 
     def debate_chat(
         self,
         topic: str,
-        difficulty: str,
-        role: Literal["user_argument", "user_counter", "user_rebuttal"],
+        topic_id: int,
+        difficulty: int,
+        role: Literal["argument", "counter_argument", "rebuttal"],
         message: str,
-        user_id: Optional[str] = None,
+        user_id: Optional[int] = None,
         session_id: Optional[str] = None,
         study_materials: Optional[str] = None,
     ) -> dict[str, Any]:
@@ -167,6 +198,8 @@ feedback
 
         prompt = build_debate_prompt(
             topic=topic,
+            topic_id=topic_id,
+            user_id=user_id or 0,
             difficulty=difficulty,
             role=role,
             user_message=message,
@@ -177,6 +210,10 @@ feedback
 
         result = self._call_ai(prompt)
         ai_message = result.get("ai_message", "")
+        
+        # Pull the dynamically computed real usage into the exact structured_data userUsage requested
+        if "structured_data" in result and "usage" in result:
+            result["structured_data"]["usage"] = result.pop("usage")
         
         if user_id and session_id and memory:
             self._memory_service.save_turn(user_id, session_id, message, ai_message)

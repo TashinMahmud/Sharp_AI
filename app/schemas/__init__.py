@@ -1,5 +1,5 @@
 
-from app.schemas.argument import ArgumentResponse, Difficulty, GenerateRequest
+from app.schemas.argument import ArgumentResponse, GenerateRequest
 from app.schemas.debate_chat import (
     AIRole,
     DebateChatRequest,
@@ -12,7 +12,6 @@ from app.schemas.hint import HintRequest, HintResponse
 from app.schemas.quiz import QuizRequest, QuizResponse
 
 __all__ = [
-    "Difficulty",
     "GenerateRequest",
     "ArgumentResponse",
     "QuizRequest",

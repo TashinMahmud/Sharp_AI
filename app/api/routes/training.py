@@ -33,28 +33,28 @@ def _handle_ai_errors(e: Exception) -> HTTPException:
 
 
 class RandomQuizRequest(BaseModel):
-    user_id: str
-    difficulty: str = "medium"
+    userId: int
+    difficulty: int = 3
 
 
 class CategoryQuizRequest(BaseModel):
-    user_id: str
-    category_id: str
-    difficulty: str = "medium"
+    userId: int
+    categoryId: int
+    difficulty: int = 3
 
 
 class TopicQuizRequest(BaseModel):
-    user_id: str
-    topic_id: str
-    difficulty: str = "medium"
+    userId: int
+    topicId: int
+    difficulty: int = 3
 
 
 class TopicDebateRequest(BaseModel):
-    user_id: str
+    userId: int
     session_id: str
-    topic_id: str
-    difficulty: str = "medium"
-    role: Literal["user_argument", "user_counter", "user_rebuttal"]
+    topicId: int
+    difficulty: int = 3
+    role: Literal["argument", "counter_argument", "rebuttal"]
     message: str
 
 
@@ -64,13 +64,13 @@ async def start_topic_debate(request: Request, req: TopicDebateRequest):
     try:
         # 1. Fetch Topic Name
         topic_service = get_topic_service()
-        topic = topic_service.get_topic(topic_id=req.topic_id)
+        topic = topic_service.get_topic(topic_id=req.topicId)
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found")
 
         # 2. Fetch Study Materials (Context)
         material_service = get_material_service()
-        materials = material_service.get_materials_by_topic(topic_id=req.topic_id)
+        materials = material_service.get_materials_by_topic(topic_id=req.topicId)
         
         study_materials_text = ""
         if materials:
@@ -84,10 +84,11 @@ async def start_topic_debate(request: Request, req: TopicDebateRequest):
         service = get_ai_service()
         result = service.debate_chat(
             topic=topic.topic_name,
+            topic_id=req.topicId,
             difficulty=req.difficulty,
             role=req.role,
             message=req.message,
-            user_id=req.user_id,
+            user_id=req.userId,
             session_id=req.session_id,
             study_materials=study_materials_text if study_materials_text else None
         )
@@ -123,17 +124,17 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
         )
         
         # Save Progress if user_id and topic_id are provided
-        if req.user_id and req.topic_id:
+        if req.userId and req.practiceContentId:
             try:
                 # Simple case-insensitive check for correctness
                 is_correct = req.selected_answer.strip().lower() == req.correct_answer.strip().lower()
                 
                 progress_service = get_progress_service()
                 progress_service.save_quiz_result(ProgressCreate(
-                    user_id=req.user_id,
-                    topic_id=req.topic_id,
-                    topic_name=req.topic_name or "Unknown Topic",
-                    score=1 if is_correct else 0,
+                    user_id=req.userId,
+                    topic_id=req.practiceContentId,
+                    topic_name=req.question[:20]+"...",
+                    score=1.0 if is_correct else 0.0,
                     difficulty=req.difficulty
                 ))
             except Exception as e:
@@ -147,7 +148,7 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
 
 @router.get("/stats/{user_id}", response_model=ProgressStats)
 @limiter.limit("60/minute")
-def get_user_stats(request: Request, user_id: str):
+def get_user_stats(request: Request, user_id: int):
     try:
         service = get_progress_service()
         return service.get_user_stats(user_id)
@@ -164,7 +165,7 @@ async def random_quiz(request: RandomQuizRequest):
         all_materials = material_service.vector_db.get(
             where={
                 "$and": [
-                    {"user_id": {"$eq": request.user_id}},
+                    {"user_id": {"$eq": request.userId}},
                     {"type": {"$eq": "material"}}
                 ]
             },
@@ -199,7 +200,7 @@ async def random_quiz(request: RandomQuizRequest):
 async def category_quiz(request: CategoryQuizRequest):
     try:
         topic_service = get_topic_service()
-        topics = topic_service.get_topics_by_category(category_id=request.category_id)
+        topics = topic_service.get_topics_by_category(category_id=request.categoryId)
         
         if not topics:
             raise HTTPException(status_code=404, detail="No topics found in this category")
@@ -244,13 +245,13 @@ async def category_quiz(request: CategoryQuizRequest):
 async def topic_quiz(request: TopicQuizRequest):
     try:
         material_service = get_material_service()
-        materials = material_service.get_materials_by_topic(topic_id=request.topic_id)
+        materials = material_service.get_materials_by_topic(topic_id=request.topicId)
         
         if not materials:
             raise HTTPException(status_code=404, detail="No materials found for this topic. Generate materials first.")
         
         topic_service = get_topic_service()
-        topic = topic_service.get_topic(topic_id=request.topic_id)
+        topic = topic_service.get_topic(topic_id=request.topicId)
         
         ai_service = get_ai_service()
         quiz = ai_service.generate_quiz(

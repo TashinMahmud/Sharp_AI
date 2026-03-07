@@ -1,4 +1,4 @@
-import uuid
+import random
 import logging
 from datetime import datetime
 
@@ -42,8 +42,8 @@ class TopicService:
             cls._instance = cls()
         return cls._instance
     
-    def create_topic(self, user_id: str, topic_name: str, category_id: Optional[str] = None, description: Optional[str] = None) -> TopicResponse:
-        topic_id = str(uuid.uuid4())
+    def create_topic(self, user_id: int, topic_name: str, category_id: Optional[int] = None, description: Optional[str] = None) -> TopicResponse:
+        topic_id = random.randint(1, 2147483647)
         created_at = datetime.now()
         
         metadata = {
@@ -63,7 +63,7 @@ class TopicService:
         self.vector_db.add_texts(
             texts=[text_content],
             metadatas=[metadata],
-            ids=[topic_id]
+            ids=[str(topic_id)]
         )
         
         logger.info(f"Created topic {topic_id} in category {category_id} for user {user_id}")
@@ -77,7 +77,7 @@ class TopicService:
             has_materials=False
         )
     
-    def get_topics_by_category(self, category_id: str) -> List[TopicResponse]:
+    def get_topics_by_category(self, category_id: int) -> List[TopicResponse]:
         results = self.vector_db.get(
             where={
                 "$and": [
@@ -102,7 +102,7 @@ class TopicService:
         
         return topics
     
-    def get_topics_by_user(self, user_id: str) -> List[TopicResponse]:
+    def get_topics_by_user(self, user_id: int) -> List[TopicResponse]:
         """Get all topics for a user, including those without a category."""
         results = self.vector_db.get(
             where={
@@ -128,9 +128,9 @@ class TopicService:
         
         return topics
     
-    def get_topic(self, topic_id: str) -> Optional[TopicResponse]:
+    def get_topic(self, topic_id: int) -> Optional[TopicResponse]:
         results = self.vector_db.get(
-            ids=[topic_id],
+            ids=[str(topic_id)],
             include=["metadatas"]
         )
         
@@ -146,9 +146,9 @@ class TopicService:
             )
         return None
     
-    def delete_topic(self, topic_id: str) -> bool:
+    def delete_topic(self, topic_id: int) -> bool:
         try:
-            self.vector_db.delete(ids=[topic_id])
+            self.vector_db.delete(ids=[str(topic_id)])
             logger.info(f"Deleted topic {topic_id}")
             return True
         except Exception as e:

@@ -11,7 +11,7 @@ router = APIRouter(prefix="/topics", tags=["topics"])
 logger = logging.getLogger(__name__)
 
 
-def _generate_materials_background(user_id: str, topic_id: str, topic_name: str, description: str):
+def _generate_materials_background(user_id: int, topic_id: int, topic_name: str, description: str):
     """Background task to generate materials for a new topic."""
     try:
         material_service = get_material_service()
@@ -20,7 +20,7 @@ def _generate_materials_background(user_id: str, topic_id: str, topic_name: str,
             topic_id=topic_id,
             topic_name=topic_name,
             description=description or "",
-            difficulty="medium"  # Default difficulty for auto-generation
+            difficulty=3  # Default difficulty for auto-generation
         )
         logger.info(f"Auto-generated materials for topic {topic_id}")
     except Exception as e:
@@ -53,7 +53,7 @@ async def create_topic(topic: TopicCreate, background_tasks: BackgroundTasks):
 
 
 @router.get("/category/{category_id}", response_model=List[TopicResponse])
-async def get_topics_by_category(category_id: str):
+async def get_topics_by_category(category_id: int):
     try:
         service = get_topic_service()
         return service.get_topics_by_category(category_id=category_id)
@@ -62,7 +62,7 @@ async def get_topics_by_category(category_id: str):
 
 
 @router.get("/user/{user_id}", response_model=List[TopicResponse])
-async def get_topics_by_user(user_id: str):
+async def get_topics_by_user(user_id: int):
     """Get all topics for a user, including uncategorized ones."""
     try:
         service = get_topic_service()
@@ -72,7 +72,7 @@ async def get_topics_by_user(user_id: str):
 
 
 @router.get("/{topic_id}", response_model=TopicResponse)
-async def get_topic(topic_id: str):
+async def get_topic(topic_id: int):
     try:
         service = get_topic_service()
         topic = service.get_topic(topic_id=topic_id)
@@ -86,7 +86,7 @@ async def get_topic(topic_id: str):
 
 
 @router.delete("/{topic_id}")
-async def delete_topic(topic_id: str):
+async def delete_topic(topic_id: int):
     try:
         topic_service = get_topic_service()
         material_service = get_material_service()
@@ -104,7 +104,7 @@ async def delete_topic(topic_id: str):
 
 
 @router.post("/{topic_id}/generate-materials", response_model=MaterialResponse)
-async def generate_materials(topic_id: str, request: MaterialGenerate):
+async def generate_materials(topic_id: int, request: MaterialGenerate):
     try:
         topic_service = get_topic_service()
         topic = topic_service.get_topic(topic_id=topic_id)
@@ -126,7 +126,7 @@ async def generate_materials(topic_id: str, request: MaterialGenerate):
 
 
 @router.get("/{topic_id}/materials", response_model=MaterialResponse)
-async def get_materials(topic_id: str):
+async def get_materials(topic_id: int):
     try:
         service = get_material_service()
         materials = service.get_materials_by_topic(topic_id=topic_id)

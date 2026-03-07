@@ -1,5 +1,5 @@
 import logging
-import uuid
+import random
 from datetime import datetime
 from typing import List, Dict, Any
 from langchain_community.vectorstores import Chroma
@@ -39,7 +39,7 @@ class ProgressService:
 
     def save_quiz_result(self, data: ProgressCreate) -> bool:
         try:
-            progress_id = str(uuid.uuid4())
+            progress_id = random.randint(1, 2147483647)
             metadata = {
                 "progress_id": progress_id,
                 "user_id": data.user_id,
@@ -57,7 +57,7 @@ class ProgressService:
             self.vector_db.add_texts(
                 texts=[text_content],
                 metadatas=[metadata],
-                ids=[progress_id]
+                ids=[str(progress_id)]
             )
             logger.info(f"Saved progress for user {data.user_id} on topic {data.topic_name}")
             return True
@@ -65,7 +65,7 @@ class ProgressService:
             logger.error(f"Failed to save progress: {e}")
             return False
 
-    def get_user_stats(self, user_id: str) -> ProgressStats:
+    def get_user_stats(self, user_id: int) -> ProgressStats:
         try:
             results = self.vector_db.get(
                 where={
@@ -100,7 +100,7 @@ class ProgressService:
             logger.error(f"Failed to get stats for user {user_id}: {e}")
             return ProgressStats(total_quizzes=0, correct_answers=0, win_rate=0.0, topics_practiced=0)
 
-    def delete_user_progress(self, user_id: str) -> int:
+    def delete_user_progress(self, user_id: int) -> int:
         try:
             results = self.vector_db.get(
                 where={

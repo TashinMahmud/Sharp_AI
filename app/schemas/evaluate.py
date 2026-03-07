@@ -1,23 +1,25 @@
 
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from pydantic import BaseModel, Field
 
-from app.schemas.argument import Difficulty
+from app.schemas.usage import UsageStats
 
 
 class EvaluateRequest(BaseModel):
 
+    practiceContentId: int
+    userId: int
     question: str = Field(..., min_length=1, max_length=2000)
     selected_answer: str = Field(..., min_length=1, max_length=1000)
     correct_answer: str = Field(..., min_length=1, max_length=1000)
-    difficulty: Difficulty
-    user_id: Optional[str] = Field(None, min_length=1, max_length=255)
+    difficulty: int = Field(..., ge=1, le=5)
     session_id: Optional[str] = Field(None, min_length=1, max_length=255)
-    topic_id: Optional[str] = Field(None)
-    topic_name: Optional[str] = Field(None)
 
 
 class EvaluateResponse(BaseModel):
 
+    score: float
     feedback: str
+    answer: Dict[str, Any]
+    usage: Optional[UsageStats] = None

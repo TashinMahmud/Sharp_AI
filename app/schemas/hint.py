@@ -2,6 +2,7 @@
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
+from app.schemas.usage import UsageStats
 
 
 class HintRequest(BaseModel):
@@ -15,3 +16,4 @@ class HintRequest(BaseModel):
 class HintResponse(BaseModel):
 
     hint: str
+    usage: Optional[UsageStats] = None

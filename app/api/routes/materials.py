@@ -13,8 +13,8 @@ from fastapi import Request
 router = APIRouter(prefix="/materials", tags=["materials"])
 
 class GenerateMaterialRequest(BaseModel):
-    topic_id: str
-    user_id: str
+    topicId: int
+    userId: int
 
 @router.post("/generate", response_model=MaterialResponse)
 @limiter.limit("5/minute")
@@ -26,13 +26,13 @@ def generate_materials(
 ):
     try:
         # Get topic details first
-        topic = topic_service.get_topic(req.topic_id)
+        topic = topic_service.get_topic(req.topicId)
         if not topic:
             raise HTTPException(status_code=404, detail="Topic not found")
             
         return service.generate_and_save_materials(
-            user_id=req.user_id,
-            topic_id=req.topic_id,
+            user_id=req.userId,
+            topic_id=req.topicId,
             topic_name=topic.topic_name,
             description=topic.description
         )
@@ -45,7 +45,7 @@ def generate_materials(
 
 @router.get("/{topic_id}", response_model=Optional[MaterialResponse])
 def get_materials(
-    topic_id: str,
+    topic_id: int,
     service: MaterialService = Depends(get_material_service)
 ):
     material = service.get_materials_by_topic(topic_id)

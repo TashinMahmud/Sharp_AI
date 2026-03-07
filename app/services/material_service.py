@@ -1,4 +1,4 @@
-import uuid
+import random
 import logging
 from datetime import datetime
 
@@ -47,11 +47,11 @@ class MaterialService:
     
     def generate_and_save_materials(
         self, 
-        user_id: str, 
-        topic_id: str, 
+        user_id: int, 
+        topic_id: int, 
         topic_name: str, 
         description: Optional[str] = None,
-        difficulty: str = "medium"
+        difficulty: int = 3
     ) -> MaterialResponse:
         
         logger.info(f"Generating materials for topic {topic_id}: {topic_name}")
@@ -61,7 +61,7 @@ class MaterialService:
             difficulty=difficulty
         )
         
-        material_id = str(uuid.uuid4())
+        material_id = random.randint(1, 2147483647)
         created_at = datetime.now()
         
         metadata = {
@@ -85,7 +85,7 @@ class MaterialService:
         self.vector_db.add_texts(
             texts=[text_content],
             metadatas=[metadata],
-            ids=[material_id]
+            ids=[str(material_id)]
         )
         
         logger.info(f"Saved materials {material_id} for topic {topic_id}")
@@ -100,7 +100,7 @@ class MaterialService:
             created_at=created_at
         )
     
-    def get_materials_by_topic(self, topic_id: str) -> Optional[MaterialResponse]:
+    def get_materials_by_topic(self, topic_id: int) -> Optional[MaterialResponse]:
         results = self.vector_db.get(
             where={
                 "$and": [
@@ -124,7 +124,7 @@ class MaterialService:
             )
         return None
     
-    def delete_materials(self, topic_id: str) -> bool:
+    def delete_materials(self, topic_id: int) -> bool:
         try:
             results = self.vector_db.get(
                 where={
