@@ -72,15 +72,15 @@ class MaterialService:
             "difficulty": difficulty,
             "created_at": created_at.isoformat(),
             "type": "material",
-            "main_arguments": str(generated["main_arguments"]),
-            "counter_arguments": str(generated["counter_arguments"]),
-            "rebuttals": str(generated["rebuttals"])
+            "main_arguments": str(generated["content"]["main_arguments"]),
+            "counter_arguments": str(generated["content"]["counter_arguments"]),
+            "rebuttals": str(generated["content"]["rebuttals"])
         }
         
         text_content = f"Topic: {topic_name}\n"
-        text_content += f"Arguments: {', '.join(generated['main_arguments'])}\n"
-        text_content += f"Counters: {', '.join(generated['counter_arguments'])}\n"
-        text_content += f"Rebuttals: {', '.join(generated['rebuttals'])}"
+        text_content += f"Arguments: {', '.join(generated['content']['main_arguments'])}\n"
+        text_content += f"Counters: {', '.join(generated['content']['counter_arguments'])}\n"
+        text_content += f"Rebuttals: {', '.join(generated['content']['rebuttals'])}"
         
         self.vector_db.add_texts(
             texts=[text_content],
@@ -93,9 +93,9 @@ class MaterialService:
         return MaterialResponse(
             material_id=material_id,
             topic_id=topic_id,
-            main_arguments=generated["main_arguments"],
-            counter_arguments=generated["counter_arguments"],
-            rebuttals=generated["rebuttals"],
+            main_arguments=generated["content"]["main_arguments"],
+            counter_arguments=generated["content"]["counter_arguments"],
+            rebuttals=generated["content"]["rebuttals"],
             difficulty=difficulty,
             created_at=created_at
         )

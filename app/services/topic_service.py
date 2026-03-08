@@ -140,7 +140,7 @@ class TopicService:
                 topic_id=meta["topic_id"],
                 topic_name=meta["topic_name"],
                 description=meta.get("description"),
-                category_id=meta["category_id"],
+                category_id=meta.get("category_id"),
                 created_at=datetime.fromisoformat(meta["created_at"]),
                 has_materials=False
             )
