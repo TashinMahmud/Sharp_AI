@@ -260,7 +260,7 @@ async def topic_quiz(request: TopicQuizRequest):
             arguments=materials.main_arguments
         )
         
-        quiz["topic_id"] = request.topic_id
+        quiz["topic_id"] = request.topicId
         quiz["topic_name"] = topic.topic_name if topic else "Unknown Topic"
         
         return quiz

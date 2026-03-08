@@ -1,4 +1,4 @@
-import uuid
+import random
 import logging
 from datetime import datetime
 
@@ -42,8 +42,8 @@ class CategoryService:
             cls._instance = cls()
         return cls._instance
     
-    def create_category(self, user_id: str, category_name: str) -> CategoryResponse:
-        category_id = str(uuid.uuid4())
+    def create_category(self, user_id: int, category_name: str) -> CategoryResponse:
+        category_id = random.randint(1, 2147483647)
         created_at = datetime.now()
         
         metadata = {
@@ -57,7 +57,7 @@ class CategoryService:
         self.vector_db.add_texts(
             texts=[f"Category: {category_name}"],
             metadatas=[metadata],
-            ids=[category_id]
+            ids=[str(category_id)]
         )
         
         logger.info(f"Created category {category_id} for user {user_id}")
@@ -69,7 +69,7 @@ class CategoryService:
             topic_count=0
         )
     
-    def get_categories(self, user_id: str) -> List[CategoryResponse]:
+    def get_categories(self, user_id: int) -> List[CategoryResponse]:
         results = self.vector_db.get(
             where={
                 "$and": [
@@ -92,9 +92,9 @@ class CategoryService:
         
         return categories
     
-    def delete_category(self, category_id: str) -> bool:
+    def delete_category(self, category_id: int) -> bool:
         try:
-            self.vector_db.delete(ids=[category_id])
+            self.vector_db.delete(ids=[str(category_id)])
             logger.info(f"Deleted category {category_id}")
             return True
         except Exception as e:

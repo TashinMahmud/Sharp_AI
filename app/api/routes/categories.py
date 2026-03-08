@@ -22,7 +22,7 @@ async def create_category(category: CategoryCreate):
 
 
 @router.get("/{user_id}", response_model=List[CategoryResponse])
-async def get_categories(user_id: str):
+async def get_categories(user_id: int):
     try:
         service = get_category_service()
         return service.get_categories(user_id=user_id)
@@ -31,7 +31,7 @@ async def get_categories(user_id: str):
 
 
 @router.delete("/{category_id}")
-async def delete_category(category_id: str):
+async def delete_category(category_id: int):
     try:
         category_service = get_category_service()
         topic_service = get_topic_service()
