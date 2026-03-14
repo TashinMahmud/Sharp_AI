@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Literal
 import random
 
@@ -50,8 +50,10 @@ class TopicQuizRequest(BaseModel):
 
 
 class TopicDebateRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    
     userId: int
-    session_id: str
+    session_id: str = Field(alias="sessionId")
     topicId: int
     difficulty: int = 3
     role: Literal["argument", "counter_argument", "rebuttal"]
