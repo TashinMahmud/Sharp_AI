@@ -1,4 +1,4 @@
-# Debate Quiz APIs
+# Debate Quiz API
 
 FastAPI backend for AI-powered debate conversations
 
