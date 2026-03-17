@@ -1,38 +1,7 @@
 # Environment
 .env
-.venv
-venv/
-venv_corrupt/
-env/
-
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg
-*.egg-info/
-dist/
-build/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# ChromaDB Data (persistent storage)
-app/data/chroma_db/
-chroma_db/
-# Environment
-.env
-.venv
+.venv/
+.venv311/
 venv/
 venv_corrupt/
 env/
@@ -68,4 +37,3 @@ chroma_db/
 .pytest_cache/
 .coverage
 htmlcov/
-.venv311/
