@@ -1,14 +1,14 @@
-# Debate Quiz API
+# Sharp AI Backend
 
-FastAPI backend for AI-powered debate conversations
+FastAPI backend for AI-powered static topic generation and dynamic debate training.
 
 ## ⚡ Quick Start
 
 ### 1. Clone & Setup
 
 ```bash
-git clone https://github.com/TashinMahmud/FastAPI-Ai-Quiz.git
-cd FastAPI-Ai-Quiz
+git clone https://github.com/TashinMahmud/Sharp-AI.git
+cd Sharp-AI
 python -m venv venv
 venv\Scripts\activate  # Windows
 pip install -r requirements.txt
