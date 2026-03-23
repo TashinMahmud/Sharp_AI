@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel
 from typing import Optional, List, Literal
 import random
 
@@ -12,7 +12,8 @@ from app.services.ai_service import get_ai_service
 from app.services.progress_service import get_progress_service
 from app.models.progress import ProgressCreate, ProgressStats
 from app.schemas import (
-    DebateChatResponse,
+    TrainingRequest,
+    TrainingResponse,
     EvaluateRequest,
     EvaluateResponse,
     HintRequest,
@@ -49,20 +50,11 @@ class TopicQuizRequest(BaseModel):
     difficulty: int = 3
 
 
-class TopicDebateRequest(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-    
-    userId: int
-    session_id: str = Field(alias="sessionId")
-    topicId: int
-    difficulty: int = 3
-    role: Literal["argument", "counter_argument", "rebuttal"]
-    message: str
+# ── Difficulty-Aware Training Generator ──────────────────────────────
 
-
-@router.post("/debate", response_model=DebateChatResponse)
+@router.post("/generate", response_model=TrainingResponse)
 @limiter.limit("30/minute")
-async def start_topic_debate(request: Request, req: TopicDebateRequest):
+async def generate_training(request: Request, req: TrainingRequest):
     try:
         # 1. Fetch Topic Name
         topic_service = get_topic_service()
@@ -82,16 +74,14 @@ async def start_topic_debate(request: Request, req: TopicDebateRequest):
                 f"Rebuttals: {materials.rebuttals}"
             )
 
-        # 3. Call AI Service with Context
+        # 3. Call AI Service (Stateless — no memory, no practiceAttempt)
         service = get_ai_service()
-        result = service.debate_chat(
+        result = service.generate_training(
             topic=topic.topic_name,
             topic_id=req.topicId,
             difficulty=req.difficulty,
-            role=req.role,
             message=req.message,
             user_id=req.userId,
-            session_id=req.session_id,
             study_materials=study_materials_text if study_materials_text else None
         )
         return result
@@ -100,8 +90,39 @@ async def start_topic_debate(request: Request, req: TopicDebateRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        raise HTTPException(status_code=500, detail=f"{str(e)}: {traceback.format_exc()}")
 
+
+def _handle_ai_errors(e: Exception) -> HTTPException:
+    if isinstance(e, RateLimitError):
+        return HTTPException(status_code=429, detail="AI rate limit exceeded. Try again shortly.")
+    if isinstance(e, AuthenticationError):
+        return HTTPException(status_code=401, detail="Invalid AI API key.")
+    if isinstance(e, (APIError, APIConnectionError)):
+        return HTTPException(status_code=503, detail="AI service temporarily unavailable. Try again later.")
+    return HTTPException(status_code=500, detail=str(e))
+
+
+class RandomQuizRequest(BaseModel):
+    userId: int
+    difficulty: int = 3
+
+
+class CategoryQuizRequest(BaseModel):
+    userId: int
+    categoryId: int
+    difficulty: int = 3
+
+
+class TopicQuizRequest(BaseModel):
+    userId: int
+    topicId: int
+    difficulty: int = 3
+
+
+
+# ── Hint ────────────────────────────────────────────────────────
 
 @router.post("/hint", response_model=HintResponse)
 @limiter.limit("30/minute")
@@ -112,6 +133,8 @@ def generate_hint(request: Request, req: HintRequest):
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
 
+
+# ── Evaluate ────────────────────────────────────────────────────
 
 @router.post("/evaluate", response_model=EvaluateResponse)
 @limiter.limit("30/minute")
@@ -148,6 +171,8 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
         raise _handle_ai_errors(e) from e
 
 
+# ── Stats ───────────────────────────────────────────────────────
+
 @router.get("/stats/{user_id}", response_model=ProgressStats)
 @limiter.limit("60/minute")
 def get_user_stats(request: Request, user_id: int):
@@ -158,6 +183,7 @@ def get_user_stats(request: Request, user_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Quizzes ─────────────────────────────────────────────────────
 
 @router.post("/random-quiz")
 async def random_quiz(request: RandomQuizRequest):

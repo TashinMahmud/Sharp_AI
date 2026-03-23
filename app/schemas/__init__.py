@@ -1,11 +1,12 @@
 
 from app.schemas.argument import ArgumentResponse, GenerateRequest
-from app.schemas.debate_chat import (
-    AIRole,
-    DebateChatRequest,
-    DebateChatResponse,
-    DebateRole,
-    DebateTurn,
+from app.schemas.topic_generator import (
+    TopicGenerateRequest,
+    TopicGenerateResponse,
+)
+from app.schemas.training_generate import (
+    TrainingRequest,
+    TrainingResponse,
 )
 from app.schemas.evaluate import EvaluateRequest, EvaluateResponse
 from app.schemas.hint import HintRequest, HintResponse
@@ -20,9 +21,8 @@ __all__ = [
     "HintResponse",
     "EvaluateRequest",
     "EvaluateResponse",
-    "DebateRole",
-    "AIRole",
-    "DebateTurn",
-    "DebateChatRequest",
-    "DebateChatResponse",
+    "TopicGenerateRequest",
+    "TopicGenerateResponse",
+    "TrainingRequest",
+    "TrainingResponse",
 ]

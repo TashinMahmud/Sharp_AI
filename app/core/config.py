@@ -16,11 +16,7 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     openai_model: str = "gpt-4o-mini"
     debug: bool = False
-    memory_max_turns: int = 20
-    memory_max_turns: int = 20
-    memory_keep_last: int = 6
     chroma_path: str = "./app/data/chroma_db"
-    memory_summary_trigger: int = 20
     openai_timeout: int = 30
     max_retries: int = 3
 

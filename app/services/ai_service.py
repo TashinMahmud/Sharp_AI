@@ -1,15 +1,13 @@
 
 import json
 import logging
-from typing import Any, Literal, Optional
+from typing import Any, Optional
 
 from openai import OpenAI, APIError, APIConnectionError, RateLimitError
-from langchain_core.messages import HumanMessage, AIMessage
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.core.config import get_settings
-from app.services.memory_service import MemoryService
-from app.services.rag_service import build_debate_prompt
+from app.services.rag_service import build_topic_generation_prompt, build_training_prompt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,9 +20,6 @@ class AIService:
             raise ValueError("OPENAI_API_KEY must be set in environment")
         self._client = OpenAI(api_key=settings.openai_api_key)
         self._model = settings.openai_model
-        
-
-        self._memory_service = MemoryService.get_instance()
 
     @staticmethod
     def get_instance() -> "AIService":
@@ -173,80 +168,58 @@ Return valid JSON only with exactly these keys:
             "usage": raw_result.get("usage", {})
         }
 
-    def debate_chat(
+    def generate_training(
         self,
         topic: str,
         topic_id: int,
-        difficulty: int,
-        role: Literal["argument", "counter_argument", "rebuttal"],
+        difficulty: str,
         message: str,
-        user_id: Optional[int] = None,
-        session_id: Optional[str] = None,
+        user_id: int,
         study_materials: Optional[str] = None,
     ) -> dict[str, Any]:
-        
-        history_text = ""
-        memory = None
-        if user_id and session_id:
-            memory = self._memory_service.get_or_create_memory(user_id, session_id)
-            messages = memory.load_memory_variables({}).get("chat_history", [])
-            history_text = "\n".join([f"{'User' if isinstance(m, HumanMessage) else 'AI'}: {m.content}" for m in messages])
+        """Stateless Training Generator based on Difficulty."""
 
-        retrieved_context = ""
-        if user_id and session_id:
-            retrieved_context = self._memory_service.retrieve_context(user_id, session_id, message)
-
-        prompt = build_debate_prompt(
+        prompt = build_training_prompt(
             topic=topic,
             topic_id=topic_id,
-            user_id=user_id or 0,
+            user_id=user_id,
             difficulty=difficulty,
-            role=role,
             user_message=message,
-            history_text=history_text,
-            retrieved_context=retrieved_context,
             study_materials=study_materials
         )
 
         result = self._call_ai(prompt)
-        ai_message = result.get("ai_message", "")
-        
-        # Pull the dynamically computed real usage into the exact structured_data userUsage requested
+
         if "structured_data" in result and "usage" in result:
             result["structured_data"]["usage"] = result.pop("usage")
-        
-        if user_id and session_id and memory:
-            self._memory_service.save_turn(user_id, session_id, message, ai_message)
-            self._memory_service.save_turn_persistent(user_id, session_id, message, ai_message)
-            
-            settings = get_settings()
-            messages = memory.chat_memory.messages
-            if len(messages) >= settings.memory_summary_trigger:
-                summary = self.summarize_conversation(messages)
-                self._memory_service.summarize_and_store(user_id, session_id, summary)
-                
-                keep_count = settings.memory_keep_last * 2
-                memory.chat_memory.messages = messages[-keep_count:]
 
         return result
 
-    def summarize_conversation(self, messages: list) -> str:
-        if not messages:
-            return ""
-            
-        serialized = "\n".join(
-            f"{'User' if isinstance(m, HumanMessage) else 'AI'}: {m.content}" for m in messages
+    def generate_topic_card(
+        self,
+        topic: str,
+        topic_id: int,
+        message: str,
+        user_id: int,
+        study_materials: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """Stateless Topic Card generator. Produces the 4-part argument card."""
+
+        prompt = build_topic_generation_prompt(
+            topic=topic,
+            topic_id=topic_id,
+            user_id=user_id,
+            user_message=message,
+            study_materials=study_materials
         )
-        prompt = f"""Summarize this debate conversation in 2-4 short sentences. Preserve key arguments and positions only.
 
-Conversation:
-{serialized}
+        result = self._call_ai(prompt)
 
-Return valid JSON only with:
-summary
-"""
-        out = self._call_ai(prompt)
-        return out.get("summary", "")
+        # Inject the real usage metrics into structured_data
+        if "structured_data" in result and "usage" in result:
+            result["structured_data"]["usage"] = result.pop("usage")
+
+        return result
 
 
 def get_ai_service() -> AIService:
