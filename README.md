@@ -58,10 +58,9 @@ The project root now contains comprehensive instructions for connecting a Postgr
 
 ## 📚 Features
 
-- AI debate conversations with persistent memory
-- Automatic conversation summarization
-- Semantic search across past sessions
-- Quiz generation and argument evaluation
+- **Static Topic Generation:** Single-shot generation of 4-part topic cards (Answer, Data/Facts, Studies, Dodge Counter).
+- **Difficulty-Scaled Training:** Dynamic scenario generation that adjusts language and complexity for Beginner, Intermediate, and Advanced skill levels.
+- **Background Content Assembly:** Automatically generates context vector embeddings for dynamic AI prompting.
 
 ## �️ Tech Stack
 
