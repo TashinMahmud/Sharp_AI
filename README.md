@@ -1,4 +1,4 @@
-# Sharp AI Backend
+# Sharp AI Backend API
 
 FastAPI backend for AI-powered static topic generation and dynamic debate training.
 
