@@ -17,6 +17,7 @@ app = FastAPI(
     title="FastAPI Quiz API",
     description="API for argumentation training: generate arguments, quizzes, hints, and evaluations",
     version="1.0.0",
+    root_path="/ai",
 )
 
 app.state.limiter = limiter
