@@ -25,8 +25,7 @@ COPY app /app/app
 # For simplicity in this setup, we'll assume .env is mounted or passed as ENV vars.
 # COPY .env . 
 
-# Create directory for chroma db persistence
-RUN mkdir -p /app/app/data/chroma_db
+
 
 # Expose port
 EXPOSE 8000

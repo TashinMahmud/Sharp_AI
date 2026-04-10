@@ -7,10 +7,6 @@ services:
     container_name: ai_debate_backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./app/data/chroma_db:/app/app/data/chroma_db
     env_file:
       - .env
-    environment:
-      - CHROMA_PATH=/app/app/data/chroma_db
     restart: unless-stopped
