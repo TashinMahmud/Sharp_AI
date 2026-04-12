@@ -14,9 +14,9 @@ from app.api.routes import (
 from app.core.limiter import limiter
 
 app = FastAPI(
-    title="FastAPI Quiz API",
-    description="API for argumentation training: generate arguments, quizzes, hints, and evaluations",
-    version="1.0.0",
+    title="Sharp Ai",
+    description="API for argumentation combat training and topic generation.",
+    version="2.0.0",
     root_path="/ai",
 )
 

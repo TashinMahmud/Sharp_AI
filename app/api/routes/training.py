@@ -56,35 +56,12 @@ class TopicQuizRequest(BaseModel):
 @limiter.limit("30/minute")
 async def generate_training(request: Request, req: TrainingRequest):
     try:
-        # 1. Fetch Topic Name
-        topic_service = get_topic_service()
-        topic = topic_service.get_topic(topic_id=req.topicId)
-        if not topic:
-            raise HTTPException(status_code=404, detail="Topic not found")
-
-        # 2. Fetch Study Materials (Context)
-        material_service = get_material_service()
-        materials = material_service.get_materials_by_topic(topic_id=req.topicId)
-        
-        study_materials_text = ""
-        if materials:
-            study_materials_text = (
-                f"Main Arguments: {materials.main_arguments}\n"
-                f"Counter Arguments: {materials.counter_arguments}\n"
-                f"Rebuttals: {materials.rebuttals}"
-            )
-
-        # 3. Call AI Service (Stateless — no memory, no practiceAttempt)
         service = get_ai_service()
-        result = service.generate_training(
-            topic=topic.topic_name,
-            topic_id=req.topicId,
+        return service.generate_training(
+            topic=req.title,
             difficulty=req.difficulty,
-            message=req.message,
-            user_id=req.userId,
-            study_materials=study_materials_text if study_materials_text else None
+            message=req.message
         )
-        return result
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
     except HTTPException:
@@ -129,14 +106,14 @@ class TopicQuizRequest(BaseModel):
 def generate_hint(request: Request, req: HintRequest):
     try:
         service = get_ai_service()
-        return service.generate_hint(req.question, req.arguments)
+        return service.generate_hint(topic=req.title, user_message=req.message)
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
 
 
 # ── Evaluate ────────────────────────────────────────────────────
 
-@router.post("/evaluate", response_model=EvaluateResponse)
+@router.post("/evaluate", response_model=EvaluateResponse, include_in_schema=False)
 @limiter.limit("30/minute")
 def evaluate_answer(request: Request, req: EvaluateRequest):
     try:
@@ -173,7 +150,7 @@ def evaluate_answer(request: Request, req: EvaluateRequest):
 
 # ── Stats ───────────────────────────────────────────────────────
 
-@router.get("/stats/{user_id}", response_model=ProgressStats)
+@router.get("/stats/{user_id}", response_model=ProgressStats, include_in_schema=False)
 @limiter.limit("60/minute")
 def get_user_stats(request: Request, user_id: int):
     try:
@@ -185,7 +162,7 @@ def get_user_stats(request: Request, user_id: int):
 
 # ── Quizzes ─────────────────────────────────────────────────────
 
-@router.post("/random-quiz")
+@router.post("/random-quiz", include_in_schema=False)
 async def random_quiz(request: RandomQuizRequest):
     try:
         material_service = get_material_service()
@@ -224,7 +201,7 @@ async def random_quiz(request: RandomQuizRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/category-quiz")
+@router.post("/category-quiz", include_in_schema=False)
 async def category_quiz(request: CategoryQuizRequest):
     try:
         topic_service = get_topic_service()
@@ -269,7 +246,7 @@ async def category_quiz(request: CategoryQuizRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/topic-quiz")
+@router.post("/topic-quiz", include_in_schema=False)
 async def topic_quiz(request: TopicQuizRequest):
     try:
         material_service = get_material_service()

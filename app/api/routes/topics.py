@@ -31,42 +31,19 @@ def _handle_ai_errors(e: Exception) -> HTTPException:
 @router.post("/generate", response_model=TopicGenerateResponse)
 @limiter.limit("30/minute")
 async def generate_topic_card(request: Request, req: TopicGenerateRequest):
-    """Generate a 4-part argument card for a topic. No difficulty, no scoring."""
     try:
-        # 1. Fetch Topic Name
-        topic_service = get_topic_service()
-        topic = topic_service.get_topic(topic_id=req.topicId)
-        if not topic:
-            raise HTTPException(status_code=404, detail="Topic not found")
-
-        # 2. Fetch Study Materials (Context)
-        material_service = get_material_service()
-        materials = material_service.get_materials_by_topic(topic_id=req.topicId)
-        
-        study_materials_text = ""
-        if materials:
-            study_materials_text = (
-                f"Main Arguments: {materials.main_arguments}\n"
-                f"Counter Arguments: {materials.counter_arguments}\n"
-                f"Rebuttals: {materials.rebuttals}"
-            )
-
-        # 3. Call AI Service (Stateless)
         service = get_ai_service()
-        result = service.generate_topic_card(
-            topic=topic.topic_name,
-            topic_id=req.topicId,
-            message=req.message,
-            user_id=req.userId,
-            study_materials=study_materials_text if study_materials_text else None
+        return service.generate_topic_card(
+            topic=req.title,
+            message=req.description
         )
-        return result
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        raise HTTPException(status_code=500, detail=f"{str(e)}: {traceback.format_exc()}")
 
 
 def _generate_materials_background(user_id: int, topic_id: int, topic_name: str, description: str):
@@ -85,7 +62,7 @@ def _generate_materials_background(user_id: int, topic_id: int, topic_name: str,
         logger.error(f"Failed to auto-generate materials for topic {topic_id}: {e}")
 
 
-@router.post("", response_model=TopicResponse)
+@router.post("", response_model=TopicResponse, include_in_schema=False)
 async def create_topic(topic: TopicCreate, background_tasks: BackgroundTasks):
     try:
         service = get_topic_service()
@@ -110,7 +87,7 @@ async def create_topic(topic: TopicCreate, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/category/{category_id}", response_model=List[TopicResponse])
+@router.get("/category/{category_id}", response_model=List[TopicResponse], include_in_schema=False)
 async def get_topics_by_category(category_id: int):
     try:
         service = get_topic_service()
@@ -119,7 +96,7 @@ async def get_topics_by_category(category_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/user/{user_id}", response_model=List[TopicResponse])
+@router.get("/user/{user_id}", response_model=List[TopicResponse], include_in_schema=False)
 async def get_topics_by_user(user_id: int):
     """Get all topics for a user, including uncategorized ones."""
     try:
@@ -129,7 +106,7 @@ async def get_topics_by_user(user_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{topic_id}", response_model=TopicResponse)
+@router.get("/{topic_id}", response_model=TopicResponse, include_in_schema=False)
 async def get_topic(topic_id: int):
     try:
         service = get_topic_service()
@@ -143,7 +120,7 @@ async def get_topic(topic_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/{topic_id}")
+@router.delete("/{topic_id}", include_in_schema=False)
 async def delete_topic(topic_id: int):
     try:
         topic_service = get_topic_service()
@@ -161,7 +138,7 @@ async def delete_topic(topic_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/{topic_id}/generate-materials", response_model=MaterialResponse)
+@router.post("/{topic_id}/generate-materials", response_model=MaterialResponse, include_in_schema=False)
 async def generate_materials(topic_id: int, request: MaterialGenerate):
     try:
         topic_service = get_topic_service()
@@ -183,7 +160,7 @@ async def generate_materials(topic_id: int, request: MaterialGenerate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{topic_id}/materials", response_model=MaterialResponse)
+@router.get("/{topic_id}/materials", response_model=MaterialResponse, include_in_schema=False)
 async def get_materials(topic_id: int):
     try:
         service = get_material_service()

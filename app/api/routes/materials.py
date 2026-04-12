@@ -16,7 +16,7 @@ class GenerateMaterialRequest(BaseModel):
     topicId: int
     userId: int
 
-@router.post("/generate", response_model=MaterialResponse)
+@router.post("/generate", response_model=MaterialResponse, include_in_schema=False)
 @limiter.limit("5/minute")
 def generate_materials(
     request: Request,
@@ -43,7 +43,7 @@ def generate_materials(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{topic_id}", response_model=Optional[MaterialResponse])
+@router.get("/{topic_id}", response_model=Optional[MaterialResponse], include_in_schema=False)
 def get_materials(
     topic_id: int,
     service: MaterialService = Depends(get_material_service)

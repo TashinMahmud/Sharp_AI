@@ -7,7 +7,7 @@ from openai import OpenAI, APIError, APIConnectionError, RateLimitError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from app.core.config import get_settings
-from app.services.rag_service import build_topic_generation_prompt, build_training_prompt
+from app.services.rag_service import build_topic_generation_prompt, build_training_prompt, build_hint_prompt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -118,20 +118,16 @@ explanation
 """
         return self._call_ai(prompt)
 
-    def generate_hint(self, question: str, arguments: list[str]) -> dict[str, Any]:
-        prompt = f"""
-Give a helpful hint for this question without revealing the answer.
-
-Question:
-"{question}"
-
-Context arguments:
-{arguments}
-
-Return valid JSON only with:
-hint
-"""
-        return self._call_ai(prompt)
+    def generate_hint(self, topic: str, user_message: str) -> dict[str, Any]:
+        prompt = build_hint_prompt(topic=topic, user_message=user_message)
+        result = self._call_ai(prompt)
+        
+        if "usage" in result:
+            result["structured_data"] = {"usage": result.pop("usage")}
+        else:
+            result["structured_data"] = {}
+            
+        return result
 
     def evaluate_answer(
         self,
@@ -171,53 +167,40 @@ Return valid JSON only with exactly these keys:
     def generate_training(
         self,
         topic: str,
-        topic_id: int,
         difficulty: str,
-        message: str,
-        user_id: int,
-        study_materials: Optional[str] = None,
+        message: str
     ) -> dict[str, Any]:
         """Stateless Training Generator based on Difficulty."""
-
         prompt = build_training_prompt(
             topic=topic,
-            topic_id=topic_id,
-            user_id=user_id,
             difficulty=difficulty,
-            user_message=message,
-            study_materials=study_materials
+            user_message=message
         )
-
         result = self._call_ai(prompt)
 
-        if "structured_data" in result and "usage" in result:
-            result["structured_data"]["usage"] = result.pop("usage")
+        if "usage" in result:
+            result["structured_data"] = {"usage": result.pop("usage")}
+        else:
+            result["structured_data"] = {}
 
         return result
 
     def generate_topic_card(
         self,
         topic: str,
-        topic_id: int,
-        message: str,
-        user_id: int,
-        study_materials: Optional[str] = None,
+        message: str
     ) -> dict[str, Any]:
         """Stateless Topic Card generator. Produces the 4-part argument card."""
-
         prompt = build_topic_generation_prompt(
             topic=topic,
-            topic_id=topic_id,
-            user_id=user_id,
-            user_message=message,
-            study_materials=study_materials
+            user_message=message
         )
-
         result = self._call_ai(prompt)
 
-        # Inject the real usage metrics into structured_data
-        if "structured_data" in result and "usage" in result:
-            result["structured_data"]["usage"] = result.pop("usage")
+        if "usage" in result:
+            result["structured_data"] = {"usage": result.pop("usage")}
+        else:
+            result["structured_data"] = {}
 
         return result
 

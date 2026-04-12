@@ -1,18 +1,7 @@
-
-from typing import Optional
-
-
 def build_topic_generation_prompt(
     topic: str,
-    topic_id: int,
-    user_id: int,
     user_message: str,
-    study_materials: Optional[str] = None
 ) -> str:
-
-    study_context = ""
-    if study_materials:
-        study_context = f"\nCore Study Materials for this Topic:\n{study_materials}\n"
 
     prompt = f"""
 ### ROLE
@@ -27,7 +16,6 @@ You are an elite political argument strategist and tactical debate coach. Your m
 
 ### CURRENT CONTEXT
 Topic: "{topic}"
-{study_context}
 User's Request:
 {user_message}
 
@@ -45,27 +33,16 @@ Max 2 references to credible institutions or academic research.
 ### OUTPUT FORMAT
 Return ONLY a valid JSON object matching this exact structure:
 {{
-  "ai_message": "### 1. Answer\\n...\\n### 2. Data / Facts\\n...\\n### 3. Studies\\n...\\n### 4. Dodge Counter\\n...",
-  "structured_data": {{
-    "practiceContent": {{ "topicId": {topic_id}, "difficulty": null, "generatedBy": "gpt-4o-mini" }},
-    "usage": {{ "totalTokens": 0, "estimated_cost_usd": 0.0 }}
-  }}
+  "ai_message": "### 1. Answer\\n...\\n### 2. Data / Facts\\n...\\n### 3. Studies\\n...\\n### 4. Dodge Counter\\n..."
 }}
 """
     return prompt
 
 def build_training_prompt(
     topic: str,
-    topic_id: int,
-    user_id: int,
     difficulty: str,
     user_message: str,
-    study_materials: Optional[str] = None
 ) -> str:
-
-    study_context = ""
-    if study_materials:
-        study_context = f"\nCore Study Materials for this Topic:\n{study_materials}\n"
 
     # Strict instructions for adjusting difficulty
     difficulty_instructions = ""
@@ -91,7 +68,6 @@ You are an elite political argument strategist and tactical debate coach. Your m
 
 ### CURRENT CONTEXT
 Topic: "{topic}"
-{study_context}
 User's Request:
 {user_message}
 
@@ -109,12 +85,31 @@ Max 2 references to credible institutions or academic research.
 ### OUTPUT FORMAT
 Return ONLY a valid JSON object matching this exact structure:
 {{
-  "ai_message": "### 1. Answer\\n...\\n### 2. Data / Facts\\n...\\n### 3. Studies\\n...\\n### 4. Dodge Counter\\n...",
-  "structured_data": {{
-    "practiceContent": {{ "topicId": {topic_id}, "difficulty": "{difficulty}", "generatedBy": "gpt-4o-mini" }},
-    "usage": {{ "totalTokens": 0, "estimated_cost_usd": 0.0 }}
-  }}
+  "ai_message": "### 1. Answer\\n...\\n### 2. Data / Facts\\n...\\n### 3. Studies\\n...\\n### 4. Dodge Counter\\n..."
 }}
 """
     return prompt
 
+def build_hint_prompt(
+    topic: str,
+    user_message: str
+) -> str:
+    prompt = f"""
+### ROLE
+You are a tactical debate coach. The user is stuck in a debate and needs guidance.
+
+### CURRENT CONTEXT
+Topic: "{topic}"
+The user just encountered this argument and needs help countering it:
+"{user_message}"
+
+### INSTRUCTION
+Provide a quick, 1-sentence strategic hint on what counter-argument or angle they should use next against their opponent. Do not write the full argument for them; just point them in the right direction.
+
+### OUTPUT FORMAT
+Return ONLY a valid JSON object matching this exact structure:
+{{
+  "hint": "Your 1-sentence strategic hint here."
+}}
+"""
+    return prompt

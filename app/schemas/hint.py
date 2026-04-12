@@ -1,19 +1,14 @@
-
-from typing import List, Optional
-
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.usage import UsageStats
 
-
 class HintRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=500)
+    message: str = Field(..., min_length=1, max_length=2000)
 
-    question: str = Field(..., min_length=1, max_length=2000)
-    arguments: List[str] = Field(..., min_length=1)
-    user_id: Optional[str] = Field(None, min_length=1, max_length=255)
-    session_id: Optional[str] = Field(None, min_length=1, max_length=255)
-
+class StructuredData(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    usage: UsageStats
 
 class HintResponse(BaseModel):
-
-    hint: str
-    usage: Optional[UsageStats] = None
+    hint: str = Field(..., min_length=1)
+    structured_data: StructuredData

@@ -8,7 +8,7 @@ from app.services.progress_service import get_progress_service
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", include_in_schema=False)
 async def delete_user(user_id: str):
     try:
         category_service = get_category_service()

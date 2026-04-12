@@ -9,7 +9,7 @@ from app.services.material_service import get_material_service
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 
-@router.post("", response_model=CategoryResponse)
+@router.post("", response_model=CategoryResponse, include_in_schema=False)
 async def create_category(category: CategoryCreate):
     try:
         service = get_category_service()
@@ -21,7 +21,7 @@ async def create_category(category: CategoryCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{user_id}", response_model=List[CategoryResponse])
+@router.get("/{user_id}", response_model=List[CategoryResponse], include_in_schema=False)
 async def get_categories(user_id: int):
     try:
         service = get_category_service()
@@ -30,7 +30,7 @@ async def get_categories(user_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/{category_id}")
+@router.delete("/{category_id}", include_in_schema=False)
 async def delete_category(category_id: int):
     try:
         category_service = get_category_service()
