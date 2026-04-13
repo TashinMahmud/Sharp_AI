@@ -118,8 +118,21 @@ explanation
 """
         return self._call_ai(prompt)
 
-    def generate_hint(self, topic: str, user_message: str) -> dict[str, Any]:
-        prompt = build_hint_prompt(topic=topic, user_message=user_message)
+    def generate_hint(
+        self,
+        category: str,
+        title: str,
+        materials: str,
+        user_message: str,
+        difficulty: str
+    ) -> dict[str, Any]:
+        prompt = build_hint_prompt(
+            category=category,
+            title=title,
+            materials=materials,
+            user_message=user_message,
+            difficulty=difficulty
+        )
         result = self._call_ai(prompt)
         
         if "usage" in result:
@@ -166,15 +179,19 @@ Return valid JSON only with exactly these keys:
 
     def generate_training(
         self,
-        topic: str,
-        difficulty: str,
-        message: str
+        category: str,
+        title: str,
+        materials: str,
+        message: str,
+        difficulty: str
     ) -> dict[str, Any]:
         """Stateless Training Generator based on Difficulty."""
         prompt = build_training_prompt(
-            topic=topic,
-            difficulty=difficulty,
-            user_message=message
+            category=category,
+            title=title,
+            materials=materials,
+            user_message=message,
+            difficulty=difficulty
         )
         result = self._call_ai(prompt)
 
@@ -182,17 +199,23 @@ Return valid JSON only with exactly these keys:
             result["structured_data"] = {"usage": result.pop("usage")}
         else:
             result["structured_data"] = {}
+            
+        result["category"] = category
+        result["title"] = title
+        result["difficulty"] = difficulty
+        result["score"] = float(result.get("score", 0.0))
+        result["evaluation"] = str(result.get("evaluation", ""))
 
         return result
 
     def generate_topic_card(
         self,
-        topic: str,
+        category: str,
         message: str
     ) -> dict[str, Any]:
         """Stateless Topic Card generator. Produces the 4-part argument card."""
         prompt = build_topic_generation_prompt(
-            topic=topic,
+            category=category,
             user_message=message
         )
         result = self._call_ai(prompt)

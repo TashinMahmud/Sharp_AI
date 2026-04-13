@@ -58,9 +58,11 @@ async def generate_training(request: Request, req: TrainingRequest):
     try:
         service = get_ai_service()
         return service.generate_training(
-            topic=req.title,
-            difficulty=req.difficulty,
-            message=req.message
+            category=req.category,
+            title=req.title,
+            materials=req.materials,
+            message=req.message,
+            difficulty=req.difficulty
         )
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
@@ -106,7 +108,13 @@ class TopicQuizRequest(BaseModel):
 def generate_hint(request: Request, req: HintRequest):
     try:
         service = get_ai_service()
-        return service.generate_hint(topic=req.title, user_message=req.message)
+        return service.generate_hint(
+            category=req.category,
+            title=req.title,
+            materials=req.materials,
+            user_message=req.message,
+            difficulty=req.difficulty
+        )
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e
 

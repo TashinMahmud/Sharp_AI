@@ -15,16 +15,23 @@ Starts or continues a debate scenario based on difficulty parameters.
 **Request Body:**
 ```json
 {
+  "category": "string",
   "title": "string",
-  "difficulty": "Beginner",
-  "message": "string"
+  "materials": "string",
+  "message": "string",
+  "difficulty": "Beginner"
 }
 ```
 
 **Response:**
 ```json
 {
+  "category": "string",
+  "title": "string",
+  "difficulty": "string",
   "ai_message": "string",
+  "evaluation": "string",
+  "score": 0.0,
   "structured_data": {
     "usage": {
       "prompt_tokens": 0,
@@ -41,16 +48,23 @@ Starts or continues a debate scenario based on difficulty parameters.
 **Example Request:**
 ```json
 {
-  "title": "Universal Basic Income",
-  "difficulty": "Beginner",
-  "message": "UBI will cause massive inflation because people will just spend the free money."
+  "category": "Religion",
+  "title": "Islamic Pacifism and Western Perception",
+  "materials": "### 1. Answer\nIslam literally means peace...",
+  "message": "I think the materials prove my point perfectly. The scripture supports my stance entirely.",
+  "difficulty": "Beginner"
 }
 ```
 
 **Example Response:**
 ```json
 {
+  "category": "Religion",
+  "title": "Islamic Pacifism and Western Perception",
+  "difficulty": "Beginner",
   "ai_message": "### 1. Answer\nThat is a common misconception, but giving people a safety net actually stimulates local economies...\n\n### 2. Data / Facts\n- A 2021 study showed UBI recipients increased local spending by 15%.\n- Inflation rates in pilot cities remained strictly in line with national averages.\n\n### 3. Studies\n- Stockton Economic Empowerment Demonstration (SEED) report.\n\n### 4. Dodge Counter\nPeople say: \"Free money just devalues the currency.\" But just like adding oil to an engine doesn't destroy the car, injecting capital into the base economy lubricates the machine.",
+  "evaluation": "Your stance successfully referenced the provided text, but it completely missed the massive economic nuance driving the opposition's core point. Strong delivery but poor tactical formulation.",
+  "score": 0.45,
   "structured_data": {
     "usage": {
       "prompt_tokens": 402,
@@ -70,8 +84,11 @@ Acts as a stealth coach, providing a 1-sentence strategic hint on how to counter
 **Request Body:**
 ```json
 {
+  "category": "string",
   "title": "string",
-  "message": "string"
+  "materials": "string",
+  "message": "string",
+  "difficulty": "Beginner"
 }
 ```
 
@@ -95,8 +112,11 @@ Acts as a stealth coach, providing a 1-sentence strategic hint on how to counter
 **Example Request:**
 ```json
 {
-  "title": "Universal Basic Income",
-  "message": "The opponent said UBI disincentivizes work."
+  "category": "Religion",
+  "title": "Islamic Pacifism and Western Perception",
+  "materials": "### 1. Answer\nIslam literally means peace...",
+  "message": "I think the materials prove my point perfectly. The scripture supports my stance entirely.",
+  "difficulty": "Beginner"
 }
 ```
 
@@ -127,14 +147,15 @@ Have the AI dynamically formulate a structured 4-part argument Topic Card based 
 **Request Body:**
 ```json
 {
-  "title": "string",
-  "description": "string"
+  "category": "string",
+  "message": "string"
 }
 ```
 
 **Response:**
 ```json
 {
+  "title": "string",
   "ai_message": "string",
   "structured_data": {
     "usage": {
@@ -152,14 +173,15 @@ Have the AI dynamically formulate a structured 4-part argument Topic Card based 
 **Example Request:**
 ```json
 {
-  "title": "Climate Change Policy",
-  "description": "A debate about whether strict emissions regulations are hurting the economy."
+  "category": "Religion",
+  "message": "Islam is a peaceful religion"
 }
 ```
 
 **Example Response:**
 ```json
 {
+  "title": "Islamic Pacifism and Western Perception",
   "ai_message": "### 1. Answer\nStrict regulations often cripple local industries and ship jobs overseas where environmental laws don't exist...\n\n### 2. Data / Facts\n- The proposed carbon tax would eliminate an estimated 1.4 million manufacturing jobs by 2030.\n- Global emissions from un-regulated countries outpace western reductions by 12 to 1.\n\n### 3. Studies\n- Heritage Foundation analysis on the economic cost of strict carbon caps.\n\n### 4. Dodge Counter\nPeople say: \"We must regulate to save our children's future.\" But burning our own house down to stay warm isn't a workable strategy; we need innovation-driven solutions, not economy-crushing regulations.",
   "structured_data": {
     "usage": {

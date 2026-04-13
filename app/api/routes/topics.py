@@ -34,8 +34,8 @@ async def generate_topic_card(request: Request, req: TopicGenerateRequest):
     try:
         service = get_ai_service()
         return service.generate_topic_card(
-            topic=req.title,
-            message=req.description
+            category=req.category,
+            message=req.message
         )
     except (ValueError, RateLimitError, AuthenticationError, APIError, APIConnectionError) as e:
         raise _handle_ai_errors(e) from e

@@ -1,5 +1,5 @@
 def build_topic_generation_prompt(
-    topic: str,
+    category: str,
     user_message: str,
 ) -> str:
 
@@ -15,8 +15,8 @@ You are an elite political argument strategist and tactical debate coach. Your m
 - Deliver the absolute strongest baseline argument you can construct.
 
 ### CURRENT CONTEXT
-Topic: "{topic}"
-User's Request:
+Category: "{category}"
+User's Argument:
 {user_message}
 
 ### RESPONSE STRUCTURE (STRICT LIMITS & MARKDOWN)
@@ -33,15 +33,18 @@ Max 2 references to credible institutions or academic research.
 ### OUTPUT FORMAT
 Return ONLY a valid JSON object matching this exact structure:
 {{
+  "title": "A short 3-6 word title for the topic",
   "ai_message": "### 1. Answer\\n...\\n### 2. Data / Facts\\n...\\n### 3. Studies\\n...\\n### 4. Dodge Counter\\n..."
 }}
 """
     return prompt
 
 def build_training_prompt(
-    topic: str,
-    difficulty: str,
+    category: str,
+    title: str,
+    materials: str,
     user_message: str,
+    difficulty: str,
 ) -> str:
 
     # Strict instructions for adjusting difficulty
@@ -67,9 +70,17 @@ You are an elite political argument strategist and tactical debate coach. Your m
 {difficulty_instructions}
 
 ### CURRENT CONTEXT
-Topic: "{topic}"
-User's Request:
-{user_message}
+Category: "{category}"
+Topic Title: "{title}"
+Training Materials Provided to User:
+"{materials}"
+
+User's Argument / Stance:
+"{user_message}"
+
+### INSTRUCTION
+Read the User's Argument. Evaluate their stance using the Context of the Training Materials. Then, construct a powerful counter-argument scaled perfectly to the {difficulty} level that attacks their specific point.
+You must also provide a short strategic "evaluation" of how strong their argument was, and assign it a "score" between 0.0 (weak/wrong) and 1.0 (perfect).
 
 ### RESPONSE STRUCTURE (STRICT LIMITS & MARKDOWN)
 Your `ai_message` MUST be formatted with these exact Markdown headers so the frontend UI can render them perfectly:
@@ -85,26 +96,38 @@ Max 2 references to credible institutions or academic research.
 ### OUTPUT FORMAT
 Return ONLY a valid JSON object matching this exact structure:
 {{
-  "ai_message": "### 1. Answer\\n...\\n### 2. Data / Facts\\n...\\n### 3. Studies\\n...\\n### 4. Dodge Counter\\n..."
+  "ai_message": "### 1. Answer\\n...\\n### 2. Data / Facts\\n...\\n### 3. Studies\\n...\\n### 4. Dodge Counter\\n...",
+  "evaluation": "Your strategic assessment of their stance goes here.",
+  "score": 0.85
 }}
 """
     return prompt
 
 def build_hint_prompt(
-    topic: str,
-    user_message: str
+    category: str,
+    title: str,
+    materials: str,
+    user_message: str,
+    difficulty: str
 ) -> str:
     prompt = f"""
 ### ROLE
 You are a tactical debate coach. The user is stuck in a debate and needs guidance.
 
 ### CURRENT CONTEXT
-Topic: "{topic}"
-The user just encountered this argument and needs help countering it:
+Category: "{category}"
+Topic Title: "{title}"
+Difficulty: "{difficulty}"
+
+Training Materials Provided to User:
+"{materials}"
+
+User's Weak/Failing Argument:
 "{user_message}"
 
 ### INSTRUCTION
-Provide a quick, 1-sentence strategic hint on what counter-argument or angle they should use next against their opponent. Do not write the full argument for them; just point them in the right direction.
+Read the User's Weak Argument and the Training Materials. The user is stuck or scored low and and needs guidance on how to properly counter the material.
+Provide a quick, 1-sentence strategic hint on what specific counter-argument, statistic, or angle they should use next. Do not write the full argument for them; just point them vividly in the right direction.
 
 ### OUTPUT FORMAT
 Return ONLY a valid JSON object matching this exact structure:
