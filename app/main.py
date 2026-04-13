@@ -16,7 +16,7 @@ from app.core.limiter import limiter
 app = FastAPI(
     title="Sharp Ai",
     description="API for argumentation combat training and topic generation.",
-    version="2.0.0",
+    version="3.0.0",
     root_path="/ai",
 )
 
