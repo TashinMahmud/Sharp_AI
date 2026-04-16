@@ -69,3 +69,6 @@ Built with **ChromaDB**, **LangChain**, and **RAG** (Retrieval-Augmented Generat
 ## �📄 License
 
 MIT License
+
+## ?? Updates
+- Daily Engagement Update: 2026-04-16
