@@ -5,13 +5,17 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white)](#prerequisites)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
+[![Groq](https://img.shields.io/badge/Groq-llama--3.3-orange?style=for-the-badge)](#open-ai-api-completion)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-0284C7?style=for-the-badge)](#retrieval-augmented-generation)
+<br/>
+[![Live Demo](https://img.shields.io/badge/Demo-sharp--ai--ipp6.onrender.com-FF5733?style=for-the-badge&logo=google-chrome&logoColor=white)](https://sharp-ai-ipp6.onrender.com/docs)
 
 ---
 
-**Sharp AI** is a professional-grade FastAPI microservice designed for static topic generation and dynamic debate combat training. Powered by **LangChain**, **ChromaDB**, and **GPT-4o-mini**, the service offers difficulty-scaled debate scenarios, real-time hints, answer evaluations, and interactive quizzes.
+**Sharp AI** is a professional-grade FastAPI microservice designed for static topic generation and dynamic debate combat training. Powered by **LangChain**, **ChromaDB**, **GPT-4o-mini**, and **Groq** models, the service offers difficulty-scaled debate scenarios, real-time hints, answer evaluations, and interactive quizzes. When OpenAI API keys are absent, it automatically employs smart `FakeEmbeddings` for vector store initializations, facilitating keyless local development.
 
 </div>
+
 
 ---
 
@@ -100,6 +104,10 @@ Integrates `slowapi` to protect against token exhaustion. Configures strict, fin
     OPENAI_MODEL=gpt-4o-mini
     CHROMA_PATH=./app/data/chroma_db
     DEBUG=False
+
+    # Optional: Set GROQ API Key to switch completion client from OpenAI to Groq
+    GROQ_API_KEY=your_groq_key_here
+    GROQ_MODEL=llama-3.3-70b-versatile
     ```
 
 ### 3. Installation & Run
