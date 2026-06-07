@@ -21,10 +21,14 @@ class CategoryService:
     def __init__(self):
         try:
             self.settings = get_settings()
-            self.embeddings = OpenAIEmbeddings(
-                api_key=self.settings.openai_api_key,
-                model="text-embedding-3-small"
-            )
+            if self.settings.openai_api_key:
+                self.embeddings = OpenAIEmbeddings(
+                    api_key=self.settings.openai_api_key,
+                    model="text-embedding-3-small"
+                )
+            else:
+                from langchain_core.embeddings import FakeEmbeddings
+                self.embeddings = FakeEmbeddings(size=1536)
             
             logger.info(f"Initializing CategoryService with ChromaDB at {self.settings.chroma_path}")
             self.vector_db = Chroma(

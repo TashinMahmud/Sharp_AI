@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     openai_api_key: Optional[str] = None
     openai_model: str = "gpt-4o-mini"
+    groq_api_key: Optional[str] = None
+    groq_model: str = "llama-3.3-70b-versatile"
     debug: bool = False
     chroma_path: str = "./app/data/chroma_db"
     openai_timeout: int = 30

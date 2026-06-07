@@ -16,10 +16,16 @@ class AIService:
 
     def __init__(self) -> None:
         settings = get_settings()
-        if not settings.openai_api_key:
-            raise ValueError("OPENAI_API_KEY must be set in environment")
-        self._client = OpenAI(api_key=settings.openai_api_key)
-        self._model = settings.openai_model
+        if settings.groq_api_key:
+            self._client = OpenAI(api_key=settings.groq_api_key, base_url="https://api.groq.com/openai/v1")
+            self._model = settings.groq_model
+            self._provider = "Groq"
+        else:
+            if not settings.openai_api_key:
+                raise ValueError("Either OPENAI_API_KEY or GROQ_API_KEY must be set in environment")
+            self._client = OpenAI(api_key=settings.openai_api_key)
+            self._model = settings.openai_model
+            self._provider = "OpenAI"
 
     @staticmethod
     def get_instance() -> "AIService":
@@ -33,7 +39,7 @@ class AIService:
     )
     def _call_ai(self, prompt: str) -> dict[str, Any]:
         try:
-            logger.info(f"Calling OpenAI with model: {self._model}")
+            logger.info(f"Calling {self._provider} with model: {self._model}")
             response = self._client.chat.completions.create(
                 model=self._model,
                 messages=[
@@ -53,8 +59,9 @@ class AIService:
                 prompt_tokens = response.usage.prompt_tokens
                 completion_tokens = response.usage.completion_tokens
                 total_tokens = response.usage.total_tokens
-                # Cost for gpt-4o-mini
-                cost = (prompt_tokens * 0.00000015) + (completion_tokens * 0.0000006)
+                
+                # Calculate cost only for OpenAI gpt-4o-mini, set to 0 for Groq
+                cost = (prompt_tokens * 0.00000015) + (completion_tokens * 0.0000006) if self._provider == "OpenAI" else 0.0
                 
                 result["usage"] = {
                     "prompt_tokens": prompt_tokens,
@@ -62,7 +69,7 @@ class AIService:
                     "totalTokens": total_tokens,
                     "totalPrompts": 1,
                     "estimated_cost_usd": cost,
-                    "model": "gpt-4o-mini"
+                    "model": self._model
                 }
 
             return result
